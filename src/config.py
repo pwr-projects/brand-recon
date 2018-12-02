@@ -10,14 +10,16 @@ import re
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
+
 __all__ = [
     'LOGO_EXTS',
+    'VERBOSE',
     'LOGO_DIRNAME',
     'LOGO_DIR',
     'TEMP_DIR',
     'DATASET_DIR',
     'LOGO_FEATURES',
-]
+    ]
 
 # MATPLOTLIB SETTINGS
 plt.style.use('seaborn-paper')
@@ -26,7 +28,7 @@ mpl.rcParams['figure.dpi'] = 150
 
 # UTILS
 LOGO_EXTS = ['jpg', 'png']
-
+VERBOSE = True
 # FILES
 LOGO_DIRNAME = 'logos'
 

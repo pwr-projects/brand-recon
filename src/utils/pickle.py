@@ -1,6 +1,9 @@
+import copyreg
 import os
 import pickle
 from functools import wraps
+
+import cv2
 
 from ..config import TEMP_DIR
 
@@ -9,6 +12,14 @@ __all__ = [
     'load',
     'savable'
 ]
+
+
+def _pickle_keypoints(point):
+    return cv2.KeyPoint, (*point.pt, point.size, point.angle,
+                          point.response, point.octave, point.class_id)
+
+
+copyreg.pickle(cv2.KeyPoint().__class__, _pickle_keypoints)
 
 
 def save(data, path: str):
@@ -39,7 +50,7 @@ def savable(what: str):
     def real_decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            if not (override_argname in kwargs.keys() and kwargs.get(override_argname)):
+            if not (override_argname in kwargs.keys() and kwargs.get(override_argname)) and os.path.exists(save_load_path):
                 return load(save_load_path)
             return save(func(*args, **kwargs), save_load_path)
         return wrapper

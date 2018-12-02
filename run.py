@@ -1,70 +1,81 @@
 # %%
-
 from src import *
 
 # %%
 
 
 import cv2
-from tqdm import tqdm
 import numpy as np
 
-def detect_with_sift(photo_path: str, logo_name: str = None, match_threshold=15):
+
+def detect_logo_with_sift(photo_path: str, *logo_names, match_threshold: int = 15, show_match: bool = True):
+    detected_logos = []
 
     sift = cv2.xfeatures2d_SIFT.create(edgeThreshold=200,
                                        sigma=1.6,
                                        nOctaveLayers=7)
 
-    img2 = img_load(os.path.join('photos', photo_path + '.jpg'))
-    kp2, des2 = sift.detectAndCompute(img2, None)
+    photo = img_load(os.path.join('photos', photo_path + '.jpg'))
+    photo_keypoints, photo_descriptors = sift.detectAndCompute(photo, None)
 
-    logos = [logo_name, ] if logo_name else get_logo_names()
-    detected_logos = []
+    logo_names = logo_names if logo_names else get_logo_names()
+    logos = {k: v for k, v in get_logo_features().items() if k in logo_names}
 
-    for logo in tqdm(logos, desc='Logo', disable=len(logos) == 1):
-        pattern = get_logo_by_name(logo)
-
-        kp1, des1 = sift.detectAndCompute(pattern, None)
-
-        flann = cv2.FlannBasedMatcher(dict(algorithm=0, trees=50), dict(checks=500))
-        matches = flann.knnMatch(des1, des2, k=2)
-
-        good = []
-        for m, n in matches:
-            if m.distance < 0.65 * n.distance:
-                good.append(m)
-
-        img = img2.copy()
+    for logo_name, (logo_keypoints, logo_descriptors) in tqdm(logos.items(),
+                                                              desc='Logo',
+                                                              disable=not (len(logo_names) > 1 and VERBOSE)):
+        print(logo_name, logo_keypoints, logo_descriptors)
+        good_matches = []
         matchesMask = None
-        if len(good) > match_threshold:
-            print(f'Found logo {logo}: {len(good)}/{match_threshold}')
+        photo_copy = photo.copy()
 
-            src_pts = np.float32([kp1[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
-            dst_pts = np.float32([kp2[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
+        flann = cv2.FlannBasedMatcher(dict(algorithm=0, trees=5), dict(checks=500))
+        matches = flann.knnMatch(logo_descriptors, photo_descriptors, k=2)
+
+        for m, n in matches:
+            if m.distance < 0.65 * n.distance:  # TODO make fun with this numeric parameter, it seems to be important
+                good_matches.append(m)
+
+        if len(good_matches) > match_threshold:
+            print(f'Found logo {logo_name}: {len(good_matches)}/{match_threshold}')
+            detected_logos.append(logo_name)
+
+        if show_match:
+            pattern = get_logo_by_name(logo_name)
+            h, w = pattern.shape[:2]
+
+            src_pts = np.float32([logo_keypoints[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
+            dst_pts = np.float32([photo_keypoints[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
 
             M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
             matchesMask = mask.ravel().tolist()
 
-            h, w = pattern.shape[:2]
-
-            pts = np.float32([[0, 0], [0, h-1], [w-1, h-1], [w-1, 0]]).reshape(-1, 1, 2)
+            pts = np.float32([[0, 0],
+                              [0, h-1],
+                              [w-1, h-1],
+                              [w-1, 0]]).reshape(-1, 1, 2)
             dst = cv2.perspectiveTransform(pts, M)
+            photo_copy = cv2.polylines(photo_copy, [np.int32(dst)], True, (255, 0, 0), 3, cv2.LINE_AA)
 
-            img = cv2.polylines(img, [np.int32(dst)], True, (255, 0, 0), 3, cv2.LINE_AA)
+            photo_copy = cv2.drawMatches(pattern,
+                                         logo_keypoints,
+                                         photo_copy,
+                                         photo_keypoints,
+                                         good_matches,
+                                         matchColor=(0, 255, 0),
+                                         matchesMask=matchesMask,
+                                         flags=cv2.DRAW_MATCHES_FLAGS_DEFAULT)
+            img_show(photo_copy)
 
-            detected_logos.append(logo)
-        else:
-            print(f'{logo} detected with {np.round((100 * len(good))/match_threshold)}% prob')
-
-        img = cv2.drawMatches(pattern, kp1, img, kp2, good,
-                              None, (0, 255, 0), None, matchesMask,
-                              cv2.DRAW_MATCHES_FLAGS_DEFAULT)
-        img_show(img)
     return detected_logos
 
 
 # %%
-detect_with_sift('windows8', 'windows')
+# detect_logo_with_sift('windows8', 'windows')
+
+
+#%%
+get_logo_features()
 
 
 #%%

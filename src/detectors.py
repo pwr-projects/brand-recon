@@ -1,10 +1,10 @@
 from collections import namedtuple
 
 import cv2
-from tqdm import tqdm
 
-from .config import LOGO_FEATURES
-from .utils import get_logo_by_name, get_logo_names, savable
+from .config import LOGO_FEATURES, VERBOSE
+from .utils import get_logo_by_name, get_logo_names, savable, tqdm
+from cv2 import KeyPoint 
 
 __all__ = [
     'Features',
@@ -15,23 +15,19 @@ Features = namedtuple('Features', ['keypoints', 'descriptors'])
 
 
 @savable(LOGO_FEATURES)
-def get_logo_features(*logos: str, verbose=None):
+def get_logo_features(*logos):
     logos = logos if logos else get_logo_names()
-    verbose = verbose if verbose is not None else (len(logos) > 1)
+    verbose = len(logos) > 1 and VERBOSE
 
-    sift = cv2.xfeatures2d_SIFT.create(nfeatures=None,
-                                       nOctaveLayers=None,
-                                       contrastThreshold=None,
-                                       edgeThreshold=None,
-                                       sigma=None)
+    sift = cv2.xfeatures2d_SIFT.create(nfeatures=10000,
+                                       nOctaveLayers=50,
+                                       edgeThreshold=1000,
+                                       sigma=1.6)
 
     logo_features = {}
-    with tqdm(logos, 'Logo features', disable=verbose) as lbar:
-
+    for logo in tqdm(logos, 'Logo features', disable=not verbose):
         logo_data = get_logo_by_name(logo)
-
-        for logo in lbar:
-            sift_data = sift.computeAndDetect(logo_data, None)
-            logo_features[logo_data] = Features(*sift_data)
+        keypoints, descriptors = sift.detectAndCompute(logo_data, None)
+        logo_features[logo] = Features(keypoints=keypoints, descriptors=descriptors)
 
     return logo_features

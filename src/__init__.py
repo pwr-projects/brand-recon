@@ -4,6 +4,9 @@ from .utils import *
 
 import os
 
+# DIRS CREATION
 for dirpath in (TEMP_DIR,):
-    if os.path.isdir(dirpath):
+    if not os.path.isdir(dirpath):
+        print(f'Creating {dirpath}', end='...')
         os.mkdir(dirpath)
+        print('OK')
