@@ -39,11 +39,11 @@ def detect_logo(photo_name: str,
     print("\nFound", len(logos), "logos to compare to.")
 
     for logo_name, (logo_keypoints, logo_descriptors) in logos:
-        print("\nComparing input photo having", len(photo_keypoints), "keypoints, with logo", logo_name, "having",
+        print("\nComparing input photo having", len(photo_keypoints), "keypoints, with logo '", logo_name, "' having",
               len(logo_keypoints), "keypoints.")
 
         good_matches = create_good_matches(matching_method, detection_method, logo_descriptors, photo_descriptors)
-        print("\nNumber of good matches between input and logo is equal to", len(good_matches))
+        print("\nNumber of good matches between input and logo '", logo_name, "' is equal to", len(good_matches))
 
         if len(good_matches) > match_threshold:
             print(f'Found logo {logo_name}: {len(good_matches)}/{match_threshold}')
@@ -55,14 +55,14 @@ def detect_logo(photo_name: str,
     return detected_logos
 
 
-def show_matched_logo(good_matches, logo_keypoints, logo_name, photo, photo_keypoints):
+def show_matched_logo(good_matches, logo_keypoints, logo_name, photo, photo_keypoints, show_matches=True, show_detection=False):
     matchesMask = None
     photo_copy = photo.copy()
     pattern = get_logo_by_name(logo_name)
     h, w = pattern.shape[:2]
     src_pts = np.float32([logo_keypoints[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
     dst_pts = np.float32([photo_keypoints[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
-    M, mask = cv2.findHomography(src_pts, dst_pts, 0, 5.0)
+    M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
     matchesMask = mask.ravel().tolist()
     pts = np.float32([[0, 0],
                       [0, h - 1],
@@ -74,15 +74,37 @@ def show_matched_logo(good_matches, logo_keypoints, logo_name, photo, photo_keyp
     else:
         # TODO CHECK WHY findHomography sometimes returns empty M
         print('Cannot create this nice matching rect due to... some unknown yet problem :c')
-    photo_copy = cv2.drawMatches(pattern,
-                                 logo_keypoints,
-                                 photo_copy,
-                                 photo_keypoints,
-                                 good_matches,
-                                 None,
-                                 matchColor=(0, 255, 0),
-                                 matchesMask=matchesMask,
-                                 flags=cv2.DRAW_MATCHES_FLAGS_NOT_DRAW_SINGLE_POINTS)
+    if show_matches:
+        photo_copy = cv2.drawMatches(pattern,
+                                     logo_keypoints,
+                                     photo_copy,
+                                     photo_keypoints,
+                                     good_matches,
+                                     None,
+                                     matchColor=(0, 255, 0),
+                                     matchesMask=matchesMask,
+                                     flags=cv2.DRAW_MATCHES_FLAGS_NOT_DRAW_SINGLE_POINTS)
+
+    if show_detection:
+        font = cv2.FONT_HERSHEY_SIMPLEX
+
+        writing_x = int(dst[0][0][0])
+        writing_y = int(min(dst[0][0][1], dst[3][0][1])-10)
+
+        bottom_left_corner_of_text = (writing_x, writing_y)
+        font_scale = 1
+        font_color = (255, 0, 128)
+        font_type = 2
+
+        cv2.putText(photo_copy, logo_name,
+                    bottom_left_corner_of_text,
+                    font,
+                    font_scale,
+                    font_color,
+                    font_type)
+
+        photo_copy = cv2.cvtColor(photo_copy, cv2.COLOR_GRAY2RGB)
+
     img_show(photo_copy)
 
 
@@ -167,11 +189,11 @@ def detect_logo_with_sift(photo_path: str, *logo_names, match_threshold: int = 5
                                        sigma=2.0,
                                        nOctaveLayers=6)
 
-    photo = img_load(os.path.join('photos', photo_path + '.jpg'))
+    photo = img_load(os.path.join('photos', photo_path))# + '.jpg'))
     photo_keypoints, photo_descriptors = sift.detectAndCompute(photo, None)
 
     logo_names = logo_names if logo_names else get_logo_names()
-    logos = {k: v for k, v in get_logo_features().items() if k in logo_names}
+    logos = {k: v for k, v in get_logo_features_sift().items() if k in logo_names}
 
     for logo_name, (logo_keypoints, logo_descriptors) in tqdm(logos.items(),
                                                               desc='Logo',
