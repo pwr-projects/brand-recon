@@ -2,8 +2,8 @@ from collections import namedtuple
 
 import cv2
 
-from .config import LOGO_FEATURES, VERBOSE, METHODS
-from .utils import get_logo_by_name, get_logo_names, savable, tqdm
+from .config import VERBOSE, METHODS
+from .utils import get_logo_by_name, get_logo_names, tqdm
 
 __all__ = [
     'Features',
@@ -40,6 +40,12 @@ def get_detector(method):
                                   edgeThreshold=25,
                                   scaleFactor=1.2,
                                   nlevels=8)
+    elif method == 'SURF':
+        detector = cv2.xfeatures2d_SURF.create(hessianThreshold=100,
+                                               nOctaves=4,
+                                               nOctaveLayers=3)
+    elif method == 'BRISK':
+        detector = cv2.BRISK_create()
     else:
         raise ValueError("Method must be from:" + str(METHODS))
     return detector

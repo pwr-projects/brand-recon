@@ -118,7 +118,7 @@ def create_good_matches(matching_method, detection_method, logo_descriptors, pho
                 good_matches.append(m)
     elif matching_method == "BF":
         for m in matches:
-            if m.distance < 19:
+            if m.distance < 150:
                 good_matches.append(m)
 
     return good_matches
@@ -126,13 +126,15 @@ def create_good_matches(matching_method, detection_method, logo_descriptors, pho
 
 def match_descriptors(method, detection_method, logo_descriptors, photo_descriptors):
     if method == 'FLANN':
-        if detection_method == 'SIFT':
+        if detection_method == 'SIFT' or \
+                detection_method == 'SURF':
             index_params = dict(algorithm=0, trees=100)
             search_params = dict(checks=5000)
             flann = cv2.FlannBasedMatcher(index_params, search_params)
             matches = flann.knnMatch(logo_descriptors, photo_descriptors, k=2)
 
-        elif method == 'ORB':
+        elif method == 'ORB' or \
+                detection_method == 'BRISK':
             index_params = dict(algorithm=6,
                                 table_number=15,  # 12
                                 key_size=20,  # 20
@@ -160,9 +162,27 @@ def detect_features(method, photo):
         descriptors, keypoints = detect_features_using_sift(photo)
     elif method == "ORB":
         descriptors, keypoints = detect_features_using_orb(photo)
+    elif method == "SURF":
+        descriptors, keypoints = detect_features_using_surf(photo)
+    elif method == 'BRISK':
+        descriptors, keypoints = detect_features_using_brisk(photo)
     else:
         raise ValueError("Method must be from:" + str(METHODS))
     return keypoints, descriptors
+
+
+def detect_features_using_brisk(photo):
+    brisk = cv2.BRISK_create()
+    keypoints, descriptors = brisk.detectAndCompute(photo, None)
+    return descriptors, keypoints
+
+
+def detect_features_using_surf(photo):
+    surf = cv2.xfeatures2d_SURF.create(hessianThreshold=100,
+                                       nOctaves=4,
+                                       nOctaveLayers=3)
+    keypoints, descriptors = surf.detectAndCompute(photo, None)
+    return descriptors, keypoints
 
 
 def detect_features_using_orb(photo):
