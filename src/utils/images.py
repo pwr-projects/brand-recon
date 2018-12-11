@@ -2,11 +2,12 @@ import os
 import re
 from functools import partial
 
+import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ..config import *
 from .misc import exist_assert, tqdm
+from ..config import *
 
 __all__ = [
     'img_load',
@@ -26,7 +27,7 @@ def imgpath(path: str) -> str:
 def img_load(path: str) -> np.ndarray:
     path = imgpath(path)
     exist_assert(path)
-    return plt.imread(path)
+    return cv2.imread(path, 0)
 
 
 def img_show(img: np.ndarray, ax=plt, **kwargs):

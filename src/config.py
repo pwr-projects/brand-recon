@@ -5,11 +5,9 @@ except ImportError:
     exit(1)
 
 import os
-import re
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-
 
 __all__ = [
     'LOGO_EXTS',
@@ -19,7 +17,15 @@ __all__ = [
     'TEMP_DIR',
     'DATASET_DIR',
     'LOGO_FEATURES',
+    'METHODS',
+    'MATCHING_METHODS',
     ]
+
+# KEY POINTS DETECTION METHODS
+METHODS = ['SIFT', 'ORB']
+
+# KEY POINTS MATCHING METHODS
+MATCHING_METHODS = ['FLANN', 'BF']
 
 # MATPLOTLIB SETTINGS
 plt.style.use('seaborn-paper')
