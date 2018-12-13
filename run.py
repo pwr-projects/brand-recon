@@ -281,6 +281,17 @@ def detect_logo_with_sift(photo_path: str, *logo_names, match_threshold: int = 5
     return detected_logos
 
 
+def run_in_loop(detection_method, matching_method, match_threshold, show_match, show_detection):
+    print("### Program started ###")
+    action = input("# Type:\n - 'c' to close the program\n - 'name_of_file' to detect logos in file")
+    while action != 'c':
+        print("# Started logo detection")
+        detect_logo(action, 'adidas', 'nike', detection_method,
+                    matching_method, match_threshold, show_match, show_detection)
+        print("# Finished logo detection")
+        action = input("# Type:\n - 'c' to close the program\n - 'name_of_file' to detect logos in file")
+    print("### Closing program ###")
+
 # %%
 #detect_logo_with_sift('adidas_bad.png', 'adidas', show_match=True)
 
@@ -288,3 +299,6 @@ def detect_logo_with_sift(photo_path: str, *logo_names, match_threshold: int = 5
 dl = detect_logo('adidas2_test.png', 'nike', 'adidas', 'adidas2', detection_method='ORB',
                  matching_method='BF', match_threshold=20, show_match=True)
 print("Detected logos:", dl)
+
+
+run_in_loop(detection_method='SIFT', matching_method='FLANN', match_threshold=50, show_match=False, show_detection=True)
