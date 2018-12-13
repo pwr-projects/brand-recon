@@ -13,7 +13,8 @@ def detect_logo(photo_name: str,
                 detection_method: str = 'SIFT',
                 matching_method: str = 'FLANN',
                 match_threshold: int = 50,
-                show_match: bool = True):
+                show_match: bool = True,
+                show_detection: bool = False):
     """ Function detecting logos in given photo.
 
     Args:
@@ -23,6 +24,7 @@ def detect_logo(photo_name: str,
         matching_method:  Method of key points matching.
         match_threshold:  Threshold of common key points for determining of specific logo presence.
         show_match:       If there will be displayed output image showing matching.
+        show_detection:   If there will be displayed bounding box and writing for logo.
 
     Returns:
         detected_logos: List of detected logo names.
@@ -32,7 +34,7 @@ def detect_logo(photo_name: str,
     detected_logos = []
 
     photo_path = os.path.join('photos', photo_name)
-    photo = img_load(photo_path)
+    photo = img_load(photo_path, True)
     photo_keypoints, photo_descriptors = detect_features(detection_method, photo)
 
     logos = get_logos_with_features(detection_method, *logo_names)
@@ -49,15 +51,19 @@ def detect_logo(photo_name: str,
             print(f'Found logo {logo_name}: {len(good_matches)}/{match_threshold}')
             detected_logos.append(logo_name)
 
-            if show_match:
-                show_matched_logo(good_matches, logo_keypoints, logo_name, photo, photo_keypoints)
-
+            show_matched_logo(good_matches, logo_keypoints, logo_name, photo_keypoints, photo_path, show_match, show_detection)
     return detected_logos
 
 
-def show_matched_logo(good_matches, logo_keypoints, logo_name, photo, photo_keypoints, show_matches=True, show_detection=False):
+def show_matched_logo(good_matches,
+                      logo_keypoints,
+                      logo_name,
+                      photo_keypoints,
+                      photo_path,
+                      show_matches,
+                      show_detection):
     matchesMask = None
-    photo_copy = photo.copy()
+    photo_copy = img_load(photo_path, False)
     pattern = get_logo_by_name(logo_name)
     h, w = pattern.shape[:2]
     src_pts = np.float32([logo_keypoints[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
@@ -70,7 +76,7 @@ def show_matched_logo(good_matches, logo_keypoints, logo_name, photo, photo_keyp
                       [w - 1, 0]]).reshape(-1, 1, 2)
     if M.size != 0:
         dst = cv2.perspectiveTransform(pts, M)
-        photo_copy = cv2.polylines(photo_copy, [np.int32(dst)], True, (255, 0, 0), 3, cv2.LINE_AA)
+        photo_copy = cv2.polylines(photo_copy, [np.int32(dst)], True, (0, 255, 0), 3, cv2.LINE_AA)
     else:
         # TODO CHECK WHY findHomography sometimes returns empty M
         print('Cannot create this nice matching rect due to... some unknown yet problem :c')
@@ -89,11 +95,12 @@ def show_matched_logo(good_matches, logo_keypoints, logo_name, photo, photo_keyp
         font = cv2.FONT_HERSHEY_SIMPLEX
 
         writing_x = int(dst[0][0][0])
-        writing_y = int(min(dst[0][0][1], dst[3][0][1])-10)
+        writing_shift = 10
+        writing_y = int(min(dst[0][0][1], dst[3][0][1]) - writing_shift)
 
         bottom_left_corner_of_text = (writing_x, writing_y)
         font_scale = 1
-        font_color = (255, 0, 128)
+        font_color = (0, 255, 0)
         font_type = 2
 
         cv2.putText(photo_copy, logo_name,
@@ -103,7 +110,7 @@ def show_matched_logo(good_matches, logo_keypoints, logo_name, photo, photo_keyp
                     font_color,
                     font_type)
 
-        photo_copy = cv2.cvtColor(photo_copy, cv2.COLOR_GRAY2RGB)
+        #photo_copy = cv2.cvtColor(photo_copy, cv2.COLOR_GRAY2RGB)
 
     img_show(photo_copy)
 
@@ -112,13 +119,13 @@ def create_good_matches(matching_method, detection_method, logo_descriptors, pho
     matches = match_descriptors(matching_method, detection_method, logo_descriptors, photo_descriptors)
     good_matches = []
 
-    if matching_method == 'FLANN':
-        for m, n in matches:
-            if m.distance < 0.7 * n.distance:
-                good_matches.append(m)
-    elif matching_method == "BF":
+    if hasattr(matches[0], 'distance'):
         for m in matches:
             if m.distance < 150:
+                good_matches.append(m)
+    else: # hasattr(matches[0], 'distance'):
+        for m, n in [el for el in matches if len(el) == 2]:
+            if m.distance < 0.7 * n.distance:
                 good_matches.append(m)
 
     return good_matches
@@ -126,15 +133,13 @@ def create_good_matches(matching_method, detection_method, logo_descriptors, pho
 
 def match_descriptors(method, detection_method, logo_descriptors, photo_descriptors):
     if method == 'FLANN':
-        if detection_method == 'SIFT' or \
-                detection_method == 'SURF':
+        if detection_method in ('SIFT', 'SURF'):
             index_params = dict(algorithm=0, trees=100)
             search_params = dict(checks=5000)
             flann = cv2.FlannBasedMatcher(index_params, search_params)
             matches = flann.knnMatch(logo_descriptors, photo_descriptors, k=2)
 
-        elif method == 'ORB' or \
-                detection_method == 'BRISK':
+        elif detection_method in ('ORB', 'BRISK'):
             index_params = dict(algorithm=6,
                                 table_number=15,  # 12
                                 key_size=20,  # 20
@@ -143,8 +148,12 @@ def match_descriptors(method, detection_method, logo_descriptors, photo_descript
             flann = cv2.FlannBasedMatcher(index_params, search_params)
             matches = flann.knnMatch(logo_descriptors, photo_descriptors, k=2)
     elif method == "BF":
-        bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
-        matches = bf.match(logo_descriptors, photo_descriptors)
+        if detection_method in ('SIFT', 'SURF'):
+            bf = cv2.BFMatcher()
+            matches = bf.knnMatch(logo_descriptors, photo_descriptors, k=2)
+        elif detection_method in ('ORB', 'BRISK'):
+            bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+            matches = bf.match(logo_descriptors, photo_descriptors)
     else:
         raise ValueError("Method must be from:" + str(MATCHING_METHODS))
     return matches
@@ -209,11 +218,11 @@ def detect_logo_with_sift(photo_path: str, *logo_names, match_threshold: int = 5
                                        sigma=2.0,
                                        nOctaveLayers=6)
 
-    photo = img_load(os.path.join('photos', photo_path))# + '.jpg'))
+    photo = img_load(os.path.join('photos', photo_path), True)# + '.jpg'))
     photo_keypoints, photo_descriptors = sift.detectAndCompute(photo, None)
 
     logo_names = logo_names if logo_names else get_logo_names()
-    logos = {k: v for k, v in get_logo_features_sift().items() if k in logo_names}
+    logos = {k: v for k, v in get_logo_features().items() if k in logo_names}
 
     for logo_name, (logo_keypoints, logo_descriptors) in tqdm(logos.items(),
                                                               desc='Logo',
