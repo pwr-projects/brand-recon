@@ -282,15 +282,47 @@ def detect_logo_with_sift(photo_path: str, *logo_names, match_threshold: int = 5
 
 
 def run_in_loop(detection_method, matching_method, match_threshold, show_match, show_detection):
-    print("### Program started ###")
-    action = input("# Type:\n - 'c' to close the program\n - 'name_of_file' to detect logos in file")
-    while action != 'c':
-        print("# Started logo detection")
-        detect_logo(action, 'adidas', 'nike', detection_method,
-                    matching_method, match_threshold, show_match, show_detection)
-        print("# Finished logo detection")
-        action = input("# Type:\n - 'c' to close the program\n - 'name_of_file' to detect logos in file")
-    print("### Closing program ###")
+    print(" ### Program started ###")
+    file_command = ''
+    while file_command != 'c':
+        file_command = input("\n # Type:\n   - 'c' to close the program\n   - 'd' to detect logos in file\n   - 'o' to open program configuration")
+        if file_command == 'o':
+            print("\n # Program configuration:\n   - Detection method:", detection_method,
+                  "\n   - Matching method:", matching_method,
+                  "\n   - Match treshold:", match_threshold)
+            command = input(" # Type:\n   - 'cd': change detection method\n "
+                            "  - 'cm': change matching method\n   - 'ct': change treshold")
+            if command == 'cd':
+                method = input(" # Type new detection method from:", METHODS, ": ")
+                if method in METHODS:
+                    detection_method = method
+                    print(" # Detection method changed to:", method)
+                else:
+                    print(" # Error: Given detection method is not available!")
+            elif command == 'cm':
+                method = input(" # Type new matching method from:", MATCHING_METHODS, ": ")
+                if method in MATCHING_METHODS:
+                    matching_method = method
+                    print(" # Matching method changed to:", method)
+                else:
+                    print(" # Error: Given matching method is not available!")
+            elif command == 'ct':
+                try:
+                    match_threshold = int(input(" # Type new matching treshold: "))
+                except ValueError:
+                    print(" # Error: Given value was no valid number.")
+            else:
+                print(" # Error: Given value was no valid command.")
+        elif file_command == 'd':
+            file_name = input(" # Type file name with extention:")
+            try:
+                print(" # Started logo detection")
+                detect_logo(file_name, 'adidas', 'nike', detection_method,
+                            matching_method, match_threshold, show_match, show_detection)
+                print(" # Finished logo detection")
+            except Exception:
+                print("")
+    print(" ### Closing program ###")
 
 # %%
 #detect_logo_with_sift('adidas_bad.png', 'adidas', show_match=True)
