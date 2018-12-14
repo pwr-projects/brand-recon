@@ -28,10 +28,11 @@ def img_load(path: str, in_grayscale: bool) -> np.ndarray:
     path = imgpath(path)
     exist_assert(path)
     color_mode = 0 if in_grayscale else 1
-    return cv2.imread(path, cv2.IMREAD_COLOR)
+    return cv2.imread(path, color_mode)
 
 
 def img_show(img: np.ndarray, ax=plt, **kwargs):
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     ax = ax.imshow(img, **kwargs)
     plt.axis('off')
     plt.show()

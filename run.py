@@ -16,7 +16,8 @@ def detect_logo(photo_name: str,
                 matching_method: str = KPM.FLANN,
                 match_threshold: int = 50,
                 show_match: bool = True,
-                show_detection: bool = False):
+                show_detection: bool = False,
+                in_grayscale=True):
     """ Function detecting logos in given photo.
 
     Args:
@@ -36,7 +37,7 @@ def detect_logo(photo_name: str,
     detected_logos = {}
 
     photo_path = os.path.join('photos', photo_name)
-    photo = img_load(photo_path, in_grayscale=False)
+    photo = img_load(photo_path, in_grayscale=in_grayscale)
     photo_keypoints, photo_descriptors = detect_features(detection_method, photo)
 
     logos = get_logos_with_features(detection_method, *logo_names)
@@ -63,7 +64,8 @@ def detect_logo(photo_name: str,
                               photo_keypoints,
                               photo_path,
                               show_match,
-                              show_detection)
+                              show_detection,
+                              in_grayscale)
     return detected_logos
 
 
@@ -73,10 +75,11 @@ def show_matched_logo(good_matches,
                       photo_keypoints,
                       photo_path,
                       show_matches,
-                      show_detection):
+                      show_detection,
+                      in_grayscale=False):
 
-    photo_copy = img_load(photo_path, in_grayscale=False)
-    pattern = get_logo_by_name(logo_name, in_grayscale=False)
+    photo_copy = img_load(photo_path, in_grayscale=in_grayscale)
+    pattern = get_logo_by_name(logo_name, in_grayscale=in_grayscale)
 
     h, w = pattern.shape[:2]
 
@@ -109,7 +112,7 @@ def show_matched_logo(good_matches,
                                      matchColor=(0, 255, 0),
                                      singlePointColor=None,
                                      matchesMask=matchesMask,
-                                     flags=2)
+                                     flags=cv2.DRAW_MATCHES_FLAGS_NOT_DRAW_SINGLE_POINTS)
 
     if show_detection:
         font = cv2.FONT_HERSHEY_SIMPLEX
@@ -137,14 +140,52 @@ def show_matched_logo(good_matches,
 
 def create_good_matches(matching_method, detection_method, logo_descriptors, photo_descriptors):
     matches = match_descriptors(matching_method, detection_method, logo_descriptors, photo_descriptors)
+    matches.sort(key=lambda x: x.distance, reverse=True)
 
     if len(matches) > 0 and hasattr(matches[0], 'distance'):
         return [m for m in matches if m.distance < 150]
     else:
         return [match[0] for match in matches
-                # if len(match) == 2 and
-                if match[0].distance < 0.7 * match[1].distance]
+                if len(match) == 2 and
+                match[0].distance < 0.7 * match[1].distance]
 
+#### TEMP
+def alignImages(im1, im2):
+ 
+  keypoints1, descriptors1 = orb.detectAndCompute(im1Gray, None)
+  keypoints2, descriptors2 = orb.detectAndCompute(im2Gray, None)
+   
+  # Match features.
+  matcher = cv2.DescriptorMatcher_create(cv2.DESCRIPTOR_MATCHER_BRUTEFORCE_HAMMING)
+  matches = matcher.match(descriptors1, descriptors2, None)
+   
+  # Sort matches by score
+  matches.sort(key=lambda x: x.distance, reverse=False)
+ 
+  # Remove not so good matches
+  numGoodMatches = int(len(matches) * GOOD_MATCH_PERCENT)
+  matches = matches[:numGoodMatches]
+ 
+  # Draw top matches
+  imMatches = cv2.drawMatches(im1, keypoints1, im2, keypoints2, matches, None)
+  cv2.imwrite("matches.jpg", imMatches)
+   
+  # Extract location of good matches
+  points1 = np.zeros((len(matches), 2), dtype=np.float32)
+  points2 = np.zeros((len(matches), 2), dtype=np.float32)
+ 
+  for i, match in enumerate(matches):
+    points1[i, :] = keypoints1[match.queryIdx].pt
+    points2[i, :] = keypoints2[match.trainIdx].pt
+   
+  # Find homography
+  h, mask = cv2.findHomography(points1, points2, cv2.RANSAC)
+ 
+  # Use homography
+  height, width, channels = im2.shape
+  im1Reg = cv2.warpPerspective(im1, h, (width, height))
+   
+  return im1Reg, h
 
 def match_descriptors(method, detection_method, logo_descriptors, photo_descriptors):
     if method == KPM.FLANN:
@@ -159,12 +200,12 @@ def match_descriptors(method, detection_method, logo_descriptors, photo_descript
             search_params = dict(checks=500)  # or pass empty dictionary
 
         flann = cv2.FlannBasedMatcher(index_params, search_params)
-        matches = flann.knnMatch(logo_descriptors, photo_descriptors, k=2)
+        matches = flann.knnMatch(logo_descriptors, photo_descriptors, k=2, compactResult=True)
         # matches = flann.radiusMatch(logo_descriptors, photo_descriptors, 100)
 
     elif method == KPM.BF:
         if detection_method in (KPD.SIFT, KPD.SURF):
-            bf = cv2.BFMatcher(cv2.NORM_L2)
+            bf = cv2.BFMatcher(cv2.NORM_L1)
             matches = bf.knnMatch(logo_descriptors, photo_descriptors, k=2)
         elif detection_method in (KPD.ORB, KPD.BRISK):
             bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
@@ -192,7 +233,7 @@ def detect_features(method, photo):
 
 
 def detect_features_using_brisk(photo):
-    brisk = cv2.BRISK_create(octaves=6)
+    brisk = cv2.BRISK_create()
     keypoints, descriptors = brisk.detectAndCompute(photo, None)
     return descriptors, keypoints
 
@@ -200,7 +241,7 @@ def detect_features_using_brisk(photo):
 def detect_features_using_surf(photo):
     surf = cv2.xfeatures2d_SURF.create(hessianThreshold=100,
                                        nOctaves=4,
-                                       nOctaveLayers=30,
+                                       nOctaveLayers=7,
                                        extended=True)
     keypoints, descriptors = surf.detectAndCompute(photo, None)
     return descriptors, keypoints
@@ -216,10 +257,10 @@ def detect_features_using_orb(photo):
 
 
 def detect_features_using_sift(photo):
-    sift = cv2.xfeatures2d_SIFT.create(edgeThreshold=100,
-                                       sigma=1.6,
-                                       nOctaveLayers=50,
-                                       contrastThreshold=0.03)
+    sift = cv2.xfeatures2d_SIFT.create(nOctaveLayers=20,
+                                       edgeThreshold=100,
+                                       contrastThreshold=0.03,
+                                       sigma=1.6)
     keypoints, descriptors = sift.detectAndCompute(photo, None)
     return descriptors, keypoints
 
@@ -235,23 +276,36 @@ def run_in_loop(**kwargs):
     print("### Closing program ###")
 
 # %%
-# detect_logo_with_sift('adidas_bad.png', 'adidas', show_match=True)
+
+# Starbucks
+# dl = detect_logo('2172776695.jpg',
+#                  #  *get_logo_names(),
+#                  'starbucks',
+#                  detection_method=KPD.SIFT,
+#                  matching_method=KPM.FLANN,
+#                  match_threshold=20,
+#                  show_match=True,
+#                  show_detection=True,
+#                  in_grayscale=False)
+
+# dl = sorted(dl.items(), key=lambda val: val[1], reverse=True)
+# print("Detected logos:")
+# pprint(dl)
 
 
-# Example
-dl = detect_logo('121116633.jpg',
-                 #  *get_logo_names(),
-                 'starbucks',
-                 detection_method=KPD.ORB,
-                 matching_method=KPM.FLANN,
-                 match_threshold=10,
-                 show_match=True,
-                 show_detection=False)
+# dl = detect_logo('2399696288.jpg',
+#                 #   *get_logo_names(),
+#                  'adidas',
+#                  detection_method=KPD.SIFT,
+#                  matching_method=KPM.FLANN,
+#                  match_threshold=20,
+#                  show_match=True,
+#                  show_detection=True,
+#                  in_grayscale=False)
 
-dl = sorted(dl.items(), key=lambda val: val[1], reverse=True)
-print("Detected logos:")
-pprint(dl)
-
+# dl = sorted(dl.items(), key=lambda val: val[1], reverse=True)
+# print("Detected logos:")
+# pprint(dl)
 
 # run_in_loop(detection_method=KPD.SIFT, matching_method=KPM.FLANN,
 #             match_threshold=50, show_match=False, show_detection=True)

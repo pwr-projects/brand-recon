@@ -30,7 +30,7 @@ def get_logo_features(method, in_grayscale, *logos):
 
 def get_detector(method):
     method_funcs = {
-        KPD.SIFT: lambda: cv2.xfeatures2d_SIFT.create(nOctaveLayers=50,
+        KPD.SIFT: lambda: cv2.xfeatures2d_SIFT.create(nOctaveLayers=4,
                                                       edgeThreshold=100,
                                                       contrastThreshold=0.03,
                                                       sigma=1.6),
@@ -38,9 +38,9 @@ def get_detector(method):
                                         edgeThreshold=10,
                                         scaleFactor=1.2,
                                         nlevels=8),
-        KPD.SURF: lambda: cv2.xfeatures2d_SURF.create(hessianThreshold=400,
+        KPD.SURF: lambda: cv2.xfeatures2d_SURF.create(hessianThreshold=100,
                                                       nOctaves=4,
-                                                      nOctaveLayers=50, 
+                                                      nOctaveLayers=4, 
                                                       extended=True),
         KPD.BRISK: lambda: cv2.BRISK_create()
     }
