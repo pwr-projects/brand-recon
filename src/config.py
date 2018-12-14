@@ -8,24 +8,23 @@ import os
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-
-__all__ = [
-    'LOGO_EXTS',
-    'VERBOSE',
-    'LOGO_DIRNAME',
-    'LOGO_DIR',
-    'TEMP_DIR',
-    'DATASET_DIR',
-    'LOGO_FEATURES',
-    'METHODS',
-    'MATCHING_METHODS',
-    ]
+from enum import Enum, auto
 
 # KEY POINTS DETECTION METHODS
-METHODS = ['SIFT', 'ORB', 'SURF', 'BRISK']
+class KPD(Enum):
+    SIFT = auto()
+    ORB = auto()
+    SURF = auto()
+    BRISK = auto()
+
+METHODS = list(KPD)
 
 # KEY POINTS MATCHING METHODS
-MATCHING_METHODS = ['FLANN', 'BF']
+class KPM(Enum):
+    FLANN = auto()
+    BF = auto()
+
+MATCHING_METHODS = list(KPM)
 
 # MATPLOTLIB SETTINGS
 plt.style.use('seaborn-paper')

@@ -2,8 +2,8 @@ from collections import namedtuple
 
 import cv2
 
-from .config import VERBOSE, METHODS
-from .utils import get_logo_by_name, get_logo_names, tqdm
+from .config import *
+from .utils import get_logo_by_name, get_logo_names, tqdm, savable
 
 __all__ = [
     'Features',
@@ -13,16 +13,15 @@ __all__ = [
 Features = namedtuple('Features', ['keypoints', 'descriptors'])
 
 
-@savable(LOGO_FEATURES)
-def get_logo_features(method, *logos):
+# @savable(LOGO_FEATURES)
+def get_logo_features(method, in_grayscale, *logos):
     logos = logos if logos else get_logo_names()
     verbose = len(logos) > 1 and VERBOSE
-
     detector = get_detector(method)
 
     logo_features = {}
-    for logo in tqdm(logos, 'Logo features', disable=not verbose):
-        logo_data = get_logo_by_name(logo)
+    for logo in tqdm(logos, 'Logo features'):
+        logo_data = get_logo_by_name(logo, in_grayscale)
         keypoints, descriptors = detector.detectAndCompute(logo_data, None)
         logo_features[logo] = Features(keypoints=keypoints, descriptors=descriptors)
 
@@ -30,22 +29,20 @@ def get_logo_features(method, *logos):
 
 
 def get_detector(method):
-    if method == 'SIFT':
-        detector = cv2.xfeatures2d_SIFT.create(nfeatures=10000,
-                                               nOctaveLayers=50,
-                                               edgeThreshold=1000,
-                                               sigma=1.6)
-    elif method == 'ORB':
-        detector = cv2.ORB_create(nfeatures=1500,
-                                  edgeThreshold=25,
-                                  scaleFactor=1.2,
-                                  nlevels=8)
-    elif method == 'SURF':
-        detector = cv2.xfeatures2d_SURF.create(hessianThreshold=100,
-                                               nOctaves=4,
-                                               nOctaveLayers=3)
-    elif method == 'BRISK':
-        detector = cv2.BRISK_create()
-    else:
-        raise ValueError("Method must be from:" + str(METHODS))
-    return detector
+    method_funcs = {
+        KPD.SIFT: lambda: cv2.xfeatures2d_SIFT.create(nOctaveLayers=50,
+                                                      edgeThreshold=100,
+                                                      contrastThreshold=0.03,
+                                                      sigma=1.6),
+        KPD.ORB: lambda: cv2.ORB_create(nfeatures=1500,
+                                        edgeThreshold=10,
+                                        scaleFactor=1.2,
+                                        nlevels=8),
+        KPD.SURF: lambda: cv2.xfeatures2d_SURF.create(hessianThreshold=400,
+                                                      nOctaves=4,
+                                                      nOctaveLayers=50, 
+                                                      extended=True),
+        KPD.BRISK: lambda: cv2.BRISK_create()
+    }
+
+    return method_funcs[method]()

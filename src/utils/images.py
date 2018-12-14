@@ -28,7 +28,7 @@ def img_load(path: str, in_grayscale: bool) -> np.ndarray:
     path = imgpath(path)
     exist_assert(path)
     color_mode = 0 if in_grayscale else 1
-    return cv2.imread(path, color_mode)
+    return cv2.imread(path, cv2.IMREAD_COLOR)
 
 
 def img_show(img: np.ndarray, ax=plt, **kwargs):
@@ -53,12 +53,12 @@ def get_logo_names(path: bool = False):
     return list(logo_names)
 
 
-def get_logo_by_name(name: str) -> np.ndarray:
+def get_logo_by_name(name: str, in_grayscale=True) -> np.ndarray:
 
     for ext in LOGO_EXTS:
         logo_name_with_ext = '.'.join([name, ext])
 
         if os.path.exists(os.path.join(LOGO_DIR, logo_name_with_ext)):
-            return img_load(os.path.join(LOGO_DIRNAME, logo_name_with_ext), True)
+            return img_load(os.path.join(LOGO_DIRNAME, logo_name_with_ext), in_grayscale)
 
     raise Exception(f'There\'s no logo of {name}.')
