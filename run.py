@@ -1,10 +1,13 @@
+#!/usr/bin/python
 # %%
+from pprint import pprint
+
 import cv2
 import numpy as np
+from colorama import Fore, Style, init
 
 from src import *
-from pprint import pprint
-from colorama import Fore, Style, init
+
 init()
 
 # %%
@@ -112,7 +115,9 @@ def show_matched_logo(good_matches,
                                      matchColor=(0, 255, 0),
                                      singlePointColor=None,
                                      matchesMask=matchesMask,
-                                     flags=cv2.DRAW_MATCHES_FLAGS_NOT_DRAW_SINGLE_POINTS)
+                                     flags=cv2.DRAW_MATCHES_FLAGS_NOT_DRAW_SINGLE_POINTS
+                                     #  flags=cv2.DRAW_MATCHES_FLAGS_DEFAULT
+                                     )
 
     if show_detection:
         font = cv2.FONT_HERSHEY_SIMPLEX
@@ -140,52 +145,16 @@ def show_matched_logo(good_matches,
 
 def create_good_matches(matching_method, detection_method, logo_descriptors, photo_descriptors):
     matches = match_descriptors(matching_method, detection_method, logo_descriptors, photo_descriptors)
-    matches.sort(key=lambda x: x.distance, reverse=True)
 
     if len(matches) > 0 and hasattr(matches[0], 'distance'):
-        return [m for m in matches if m.distance < 150]
+        matches.sort(key=lambda x: x.distance, reverse=True)
+        return [m for m in matches if m.distance < 100]
     else:
+        # matches.sort(key=lambda x: x[0].distance, reverse=True)
         return [match[0] for match in matches
-                if len(match) == 2 and
-                match[0].distance < 0.7 * match[1].distance]
+                if len(match) == 2
+                and match[0].distance < 0.7 * match[1].distance]
 
-#### TEMP
-def alignImages(im1, im2):
- 
-  keypoints1, descriptors1 = orb.detectAndCompute(im1Gray, None)
-  keypoints2, descriptors2 = orb.detectAndCompute(im2Gray, None)
-   
-  # Match features.
-  matcher = cv2.DescriptorMatcher_create(cv2.DESCRIPTOR_MATCHER_BRUTEFORCE_HAMMING)
-  matches = matcher.match(descriptors1, descriptors2, None)
-   
-  # Sort matches by score
-  matches.sort(key=lambda x: x.distance, reverse=False)
- 
-  # Remove not so good matches
-  numGoodMatches = int(len(matches) * GOOD_MATCH_PERCENT)
-  matches = matches[:numGoodMatches]
- 
-  # Draw top matches
-  imMatches = cv2.drawMatches(im1, keypoints1, im2, keypoints2, matches, None)
-  cv2.imwrite("matches.jpg", imMatches)
-   
-  # Extract location of good matches
-  points1 = np.zeros((len(matches), 2), dtype=np.float32)
-  points2 = np.zeros((len(matches), 2), dtype=np.float32)
- 
-  for i, match in enumerate(matches):
-    points1[i, :] = keypoints1[match.queryIdx].pt
-    points2[i, :] = keypoints2[match.trainIdx].pt
-   
-  # Find homography
-  h, mask = cv2.findHomography(points1, points2, cv2.RANSAC)
- 
-  # Use homography
-  height, width, channels = im2.shape
-  im1Reg = cv2.warpPerspective(im1, h, (width, height))
-   
-  return im1Reg, h
 
 def match_descriptors(method, detection_method, logo_descriptors, photo_descriptors):
     if method == KPM.FLANN:
@@ -241,7 +210,7 @@ def detect_features_using_brisk(photo):
 def detect_features_using_surf(photo):
     surf = cv2.xfeatures2d_SURF.create(hessianThreshold=100,
                                        nOctaves=4,
-                                       nOctaveLayers=7,
+                                       nOctaveLayers=4,
                                        extended=True)
     keypoints, descriptors = surf.detectAndCompute(photo, None)
     return descriptors, keypoints
@@ -257,10 +226,11 @@ def detect_features_using_orb(photo):
 
 
 def detect_features_using_sift(photo):
-    sift = cv2.xfeatures2d_SIFT.create(nOctaveLayers=20,
-                                       edgeThreshold=100,
-                                       contrastThreshold=0.03,
-                                       sigma=1.6)
+    sift = cv2.xfeatures2d_SIFT.create(  # nfeatures=1500,
+        nOctaveLayers=4,
+        edgeThreshold=200,
+        contrastThreshold=0.03,
+        sigma=1.6)
     keypoints, descriptors = sift.detectAndCompute(photo, None)
     return descriptors, keypoints
 
@@ -275,32 +245,30 @@ def run_in_loop(**kwargs):
         action = input("# Type:\n - 'c' to close the program\n - 'name_of_file' to detect logos in file: ")
     print("### Closing program ###")
 
-# %%
-
 # Starbucks
-# dl = detect_logo('2172776695.jpg',
-#                  #  *get_logo_names(),
-#                  'starbucks',
+dl = detect_logo('2172776695.jpg',
+                   *get_logo_names(),
+                #  'starbucks',
+                 detection_method=KPD.SIFT,
+                 matching_method=KPM.FLANN,
+                 match_threshold=20,
+                 show_match=False,
+                 show_detection=False,
+                 in_grayscale=False)
+
+dl = sorted(dl.items(), key=lambda val: val[1], reverse=True)
+print("Detected logos:")
+pprint(dl)
+
+
+# dl = detect_logo('android12.jpg',
+#                  #   *get_logo_names(),
+#                  'android',
 #                  detection_method=KPD.SIFT,
 #                  matching_method=KPM.FLANN,
-#                  match_threshold=20,
+#                  match_threshold=15,
 #                  show_match=True,
-#                  show_detection=True,
-#                  in_grayscale=False)
-
-# dl = sorted(dl.items(), key=lambda val: val[1], reverse=True)
-# print("Detected logos:")
-# pprint(dl)
-
-
-# dl = detect_logo('2399696288.jpg',
-#                 #   *get_logo_names(),
-#                  'adidas',
-#                  detection_method=KPD.SIFT,
-#                  matching_method=KPM.FLANN,
-#                  match_threshold=20,
-#                  show_match=True,
-#                  show_detection=True,
+#                  show_detection=False,
 #                  in_grayscale=False)
 
 # dl = sorted(dl.items(), key=lambda val: val[1], reverse=True)
