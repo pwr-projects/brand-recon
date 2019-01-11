@@ -38,6 +38,7 @@ def detect_logo(photo_name: str,
     """
 
     detected_logos = {}
+    detected_logos_imgs = {}
 
     photo_path = os.path.join('photos', photo_name)
     photo = img_load(photo_path, in_grayscale=in_grayscale)
@@ -54,21 +55,24 @@ def detect_logo(photo_name: str,
                                            detection_method,
                                            logo_descriptors,
                                            photo_descriptors)
+
         print("\nNumber of good matches between input and logo '", Fore.GREEN if len(good_matches) >
               match_threshold else Fore.RED, logo_name, Style.RESET_ALL, "' is equal to", len(good_matches))
 
         if len(good_matches) > match_threshold:
             print(f'Found logo {logo_name}: {len(good_matches)}/{match_threshold}')
-            detected_logos[logo_name] = len(good_matches)
 
-            show_matched_logo(good_matches,
-                              logo_keypoints,
-                              logo_name,
-                              photo_keypoints,
-                              photo_path,
-                              show_match,
-                              show_detection,
-                              in_grayscale)
+            img = show_matched_logo(good_matches,
+                                    logo_keypoints,
+                                    logo_name,
+                                    photo_keypoints,
+                                    photo_path,
+                                    show_match,
+                                    show_detection,
+                                    in_grayscale)
+
+            detected_logos[logo_name] = len(good_matches)  # , img
+
     return detected_logos
 
 
@@ -115,8 +119,8 @@ def show_matched_logo(good_matches,
                                      matchColor=(0, 255, 0),
                                      singlePointColor=None,
                                      matchesMask=matchesMask,
-                                     flags=cv2.DRAW_MATCHES_FLAGS_NOT_DRAW_SINGLE_POINTS
-                                     #  flags=cv2.DRAW_MATCHES_FLAGS_DEFAULT
+                                      flags=cv2.DRAW_MATCHES_FLAGS_NOT_DRAW_SINGLE_POINTS
+                                    #  flags=cv2.DRAW_MATCHES_FLAGS_DEFAULT
                                      )
 
     if show_detection:
@@ -148,7 +152,7 @@ def create_good_matches(matching_method, detection_method, logo_descriptors, pho
 
     if len(matches) > 0 and hasattr(matches[0], 'distance'):
         matches.sort(key=lambda x: x.distance, reverse=True)
-        return [m for m in matches if m.distance < 100]
+        return [m for m in matches if m.distance < 50]
     else:
         # matches.sort(key=lambda x: x[0].distance, reverse=True)
         return [match[0] for match in matches
@@ -159,8 +163,9 @@ def create_good_matches(matching_method, detection_method, logo_descriptors, pho
 def match_descriptors(method, detection_method, logo_descriptors, photo_descriptors):
     if method == KPM.FLANN:
         if detection_method in (KPD.SIFT, KPD.SURF):
-            index_params = dict(algorithm=0, trees=5)
-            search_params = dict(checks=50)
+            index_params = dict(algorithm=0, trees=50)
+            search_params = dict(checks=500)
+
         elif detection_method in (KPD.ORB, KPD.BRISK):
             index_params = dict(algorithm=6,
                                 table_number=15,  # 12
@@ -174,8 +179,8 @@ def match_descriptors(method, detection_method, logo_descriptors, photo_descript
 
     elif method == KPM.BF:
         if detection_method in (KPD.SIFT, KPD.SURF):
-            bf = cv2.BFMatcher(cv2.NORM_L1)
-            matches = bf.knnMatch(logo_descriptors, photo_descriptors, k=2)
+            bf = cv2.BFMatcher(cv2.NORM_L2)
+            matches = bf.knnMatch(logo_descriptors, photo_descriptors, crossCheck=True, k=2)
         elif detection_method in (KPD.ORB, KPD.BRISK):
             bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
             matches = bf.match(logo_descriptors, photo_descriptors)
@@ -217,18 +222,18 @@ def detect_features_using_surf(photo):
 
 
 def detect_features_using_orb(photo):
-    orb = cv2.ORB_create(nfeatures=1500,
-                         edgeThreshold=25,
-                         scaleFactor=1.2,
-                         nlevels=8)
+    orb = cv2.ORB_create(  # nfeatures=1500,
+        edgeThreshold=20,
+        scaleFactor=1.6,
+        nlevels=8)
     keypoints, descriptors = orb.detectAndCompute(photo, None)
     return descriptors, keypoints
 
 
 def detect_features_using_sift(photo):
     sift = cv2.xfeatures2d_SIFT.create(  # nfeatures=1500,
-        nOctaveLayers=4,
-        edgeThreshold=200,
+        nOctaveLayers=8,
+        edgeThreshold=10,
         contrastThreshold=0.03,
         sigma=1.6)
     keypoints, descriptors = sift.detectAndCompute(photo, None)
@@ -245,33 +250,34 @@ def run_in_loop(**kwargs):
         action = input("# Type:\n - 'c' to close the program\n - 'name_of_file' to detect logos in file: ")
     print("### Closing program ###")
 
-# Starbucks
-dl = detect_logo('2172776695.jpg',
-                   *get_logo_names(),
-                #  'starbucks',
-                 detection_method=KPD.SIFT,
-                 matching_method=KPM.FLANN,
-                 match_threshold=20,
-                 show_match=False,
-                 show_detection=False,
-                 in_grayscale=False)
 
-dl = sorted(dl.items(), key=lambda val: val[1], reverse=True)
+dl = detect_logo(
+    'danone7.jpg',
+    # 'supreme19.jpg',
+    *get_logo_names(),
+    detection_method=KPD.ORB,
+    matching_method=KPM.FLANN,
+    match_threshold=45,
+    show_match=False,
+    show_detection=True,
+    in_grayscale=False)
+
+dl = sorted(dl.items(), key=lambda val: val[1])  # , reverse=True)
+
 print("Detected logos:")
 pprint(dl)
 
-
 # dl = detect_logo('android12.jpg',
-#                  #   *get_logo_names(),
+#                 #    *get_logo_names(),
 #                  'android',
 #                  detection_method=KPD.SIFT,
 #                  matching_method=KPM.FLANN,
-#                  match_threshold=15,
-#                  show_match=True,
+#                  match_threshold=30,
+#                  show_match=False,
 #                  show_detection=False,
 #                  in_grayscale=False)
 
-# dl = sorted(dl.items(), key=lambda val: val[1], reverse=True)
+# dl = sorted(dl.items(), key=lambda val: val[1])
 # print("Detected logos:")
 # pprint(dl)
 
