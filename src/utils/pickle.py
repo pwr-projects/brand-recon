@@ -5,7 +5,7 @@ from functools import wraps
 
 import cv2
 
-from ..config import TEMP_DIR
+from ..config import DIR_TEMP
 
 __all__ = [
     'save',
@@ -45,7 +45,7 @@ def savable(what: str):
     in the wrapped function :3
     """
     override_argname = 'override'
-    save_load_path = os.path.join(TEMP_DIR, what)
+    save_load_path = os.path.join(DIR_TEMP, what)
 
     def real_decorator(func):
         @wraps(func)

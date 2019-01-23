@@ -3,20 +3,19 @@ from collections import namedtuple
 import cv2
 
 from .config import *
-from .utils import get_logo_by_name, get_logo_names, tqdm, savable
+from .utils import get_logo_by_name, get_logo_names, savable, tqdm
 
 __all__ = [
     'Features',
-    'get_logo_features',
+    'get_logo_features'
 ]
 
 Features = namedtuple('Features', ['keypoints', 'descriptors'])
 
 
-# @savable(LOGO_FEATURES)
+# @savable(SAVABLE_LOGO_FEATURES)
 def get_logo_features(method, in_grayscale, *logos):
     logos = logos if logos else get_logo_names()
-    verbose = len(logos) > 1 and VERBOSE
     detector = get_detector(method)
 
     logo_features = {}
