@@ -3,7 +3,6 @@ import os
 from .config import *
 from .features import *
 from .utils import *
-from .logo_finder import *
 from .plots import *
 from .detector import *
 from .matcher import *
