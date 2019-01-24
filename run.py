@@ -1,26 +1,28 @@
 #!/usr/bin/python
 # %%
-from pprint import pprint
 
-import cv2
+import json
+
 import numpy as np
-from colorama import Fore, Style, init
+from colorama import Fore, Style
 
 from src import *
 
-init()
+
+#init()
 
 # %%
 
 
 def detect_logo(photo_name: str,
                 *logo_names,
+                tresholds,
                 detection_method: str = KPD.SIFT,
                 matching_method: str = KPM.FLANN,
                 match_threshold: int = 50,
                 show_match: bool = True,
                 show_detection: bool = False,
-                in_grayscale=True):
+                in_grayscale=True) -> dict:
     """ Function detecting logos in given photo.
 
     Args:
@@ -40,7 +42,8 @@ def detect_logo(photo_name: str,
     detected_logos = {}
     detected_logos_imgs = {}
 
-    photo_path = os.path.join('photos', photo_name)
+    # photo_path = os.path.join('photos', photo_name)
+    photo_path = photo_name
     photo = img_load(photo_path, in_grayscale=in_grayscale)
     photo_keypoints, photo_descriptors = detect_features(detection_method, photo)
 
@@ -55,6 +58,11 @@ def detect_logo(photo_name: str,
                                            detection_method,
                                            logo_descriptors,
                                            photo_descriptors)
+
+        if not logo_name in tresholds.keys():  # TODO: move to other place and then remove match_treshold from arguments
+           tresholds[logo_name] = match_threshold
+
+        match_threshold = tresholds[logo_name]
 
         print("\nNumber of good matches between input and logo '", Fore.GREEN if len(good_matches) >
               match_threshold else Fore.RED, logo_name, Style.RESET_ALL, "' is equal to", len(good_matches))
@@ -251,6 +259,152 @@ def run_in_loop(**kwargs):
     print("### Closing program ###")
 
 
+def save_tresholds(tresholds):
+    fh = open("data\\persisted\\tresholds.json", 'w+') # TODO: find a better name for the dir to save the tresholds
+    json.dump(tresholds, fh)
+
+
+def load_tresholds():
+    try:
+        fh = open("data\\persisted\\tresholds.json", 'r')
+        tresholds = json.load(fh)
+    except:
+        tresholds = {}
+        names = get_logo_names()
+        for name in names:
+            tresholds[name] = 25
+    return tresholds
+
+
+def test_all_from_dir(directory_in_str, tresholds, should_print_info=False):
+    logo_to_detect = os.path.basename(directory_in_str)
+    fn_images_list = []
+
+    local_cms = init_confusion_matrices()
+
+    for file in os.listdir(directory_in_str):
+        filename = os.fsdecode(file)
+        if filename.endswith(".jpg"): # or filename.endswith(".png"):
+            file_path = os.path.join('all_pics', logo_to_detect, filename)
+            dl = detect_logo(
+                file_path,
+                *get_logo_names(),
+                tresholds=tresholds,
+                detection_method=KPD.ORB,
+                matching_method=KPM.FLANN,
+                match_threshold=35,
+                show_match=False,
+                show_detection=False,
+                in_grayscale=False)
+
+            ''' if not dl == {} and logo_to_detect == max(dl, key=dl.get):  # in dl.keys():
+                # TP
+                tp += 1
+            else:
+                if not dl == {}:
+                    fp += len(dl.keys())  # TODO: change to add +1 to FP for each falsely detected logo
+                fn += 1
+                fn_images_list.append(os.path.join(directory_in_str, filename))'''
+
+            # compute confusion matrixes info
+            if dl == {}:
+                # FN
+                local_cms[logo_to_detect][3] += 1
+            else:
+                if logo_to_detect == max(dl, key=dl.get):
+                    # TP
+                    local_cms[logo_to_detect][0] += 1
+                for name in dl.keys():
+                    if not name == logo_to_detect:
+                        local_cms[name][2] += 1
+            for name in get_logo_names():
+                if not name == logo_to_detect and not name in dl.keys():
+                    local_cms[name][1] += 1
+
+        if should_print_info:
+            print('FN for "', logo_to_detect, '": ', local_cms[logo_to_detect][3])
+            print('TP for "', logo_to_detect, '": ', local_cms[logo_to_detect][0])
+            print('Could not detect logos in files:')
+            for f in fn_images_list:
+                print(Fore.RED, ' - ', f)
+
+    return local_cms
+
+
+def init_confusion_matrices():
+    cms = {}
+    names = get_logo_names()
+    for name in names:
+        # Confusion matrix for each logo as list: [TP, TN, FP, FN]
+        cms[name] = [0, 0, 0, 0]
+    return cms
+
+
+def update_cms(cms: dict, infos: dict) -> dict:  # TODO: change infos parameter name
+    new_cms = cms.copy()
+    for name in new_cms.keys():
+        new_cms[name] = (cms[name][0] + infos[name][0],
+                         cms[name][1] + infos[name][1],
+                         cms[name][2] + infos[name][2],
+                         cms[name][3] + infos[name][3])
+    return new_cms
+
+
+def update_tresholds(tresholds: dict, cm: dict) -> dict:
+    new_tresholds = tresholds.copy()
+    all_imgs_nr = sum([sum(cm[name]) for name in new_tresholds.keys()])
+    for name in new_tresholds.keys():
+        logo_imgs_nr = sum(cm[name])  # logo_imgs_nr = 35
+        # all_imgs_nr = 400  # 35
+        fp_rate = cm[name][2] / (all_imgs_nr - logo_imgs_nr)
+        fn_rate = cm[name][3] / logo_imgs_nr
+
+        # optimization criterion
+        if fn_rate < fp_rate:
+            new_tresholds[name] += 1
+    return new_tresholds
+
+
+def optimize():
+    # TODO: adjust to optimize tresholds for each method (maybe separate file for each method and  just pass the treshold_file names as an attribute)
+    print(Fore.BLUE, ' # Optimization started !!!')
+    tresholds = load_tresholds()
+    new_tresholds = {}
+    subfolders_names = ['biedronka', 'zabka']  # [f.name for f in os.scandir('data\\all_pics') if f.is_dir()]
+
+    while True: # not tresholds == new_tresholds:
+        # if new_tresholds == {}:
+        #     new_tresholds = tresholds
+        cms = init_confusion_matrices()
+
+        for name in subfolders_names:
+            cm_info = test_all_from_dir('data\\all_pics\\' + name, tresholds)  # TODO: use os
+            cms = update_cms(cms, cm_info)
+
+        new_tresholds = update_tresholds(tresholds, cms)
+        print('Confusion Matrices:', cms)
+        print('New tresholds:', new_tresholds)
+        if new_tresholds == tresholds:
+            break
+        else:
+            tresholds = new_tresholds
+
+    print(Fore.BLUE, ' # Optimization finished !!!')
+    print('Optimized tresholds:', new_tresholds)
+    save_tresholds(new_tresholds)
+
+
+# Starbucks
+'''
+dl = detect_logo('adidas_test.png',
+                 *get_logo_names(),
+                 detection_method=KPD.SURF,
+                 matching_method=KPM.FLANN,
+                 match_threshold=20,
+                 show_match=True,
+                 show_detection=False,
+                 in_grayscale=False)
+
 dl = detect_logo(
     'danone7.jpg',
     # 'supreme19.jpg',
@@ -265,7 +419,12 @@ dl = detect_logo(
 dl = sorted(dl.items(), key=lambda val: val[1])  # , reverse=True)
 
 print("Detected logos:")
-pprint(dl)
+print(dl)
+
+'''
+# %%
+#detect_logo_with_sift('adidas_test.png', 'adidas', show_match=True)
+
 
 # dl = detect_logo('android12.jpg',
 #                 #    *get_logo_names(),
@@ -283,3 +442,9 @@ pprint(dl)
 
 # run_in_loop(detection_method=KPD.SIFT, matching_method=KPM.FLANN,
 #             match_threshold=50, show_match=False, show_detection=True)
+
+#run_in_loop(detection_method='SIFT', matching_method='FLANN', match_threshold=50, show_match=False, show_detection=True)
+
+
+
+optimize()
