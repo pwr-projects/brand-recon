@@ -1,12 +1,5 @@
-try:
-    import cv2
-except ImportError:
-    print('Install OpenCV to proceed.')
-    exit(1)
-
 from tqdm import tqdm
 from functools import partial
-
 
 import re
 from enum import Enum, auto
@@ -51,4 +44,4 @@ filename_ext = lambda exts: re.compile(r'^\w+\.(' + '|'.join(exts) + r')$')
 LOGO_FILENAME_REGEX = filename_ext(PHOTO_EXTS)
 
 # custom tqdm
-tqdm = partial(tqdm, disable=not VERBOSE, dynamic_ncols=True)
+tqm = partial(tqdm, disable=not VERBOSE, dynamic_ncols=True)
