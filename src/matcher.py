@@ -38,7 +38,7 @@ class Matcher:
             index_params = dict(algorithm=6,
                                 table_number=15,
                                 key_size=20,
-                                multi_probe_level=2)
+                                multi_probe_level=5)
             search_params = dict(checks=500)
         else:
             raise Exception('Pass subset of {SIFT, SURF}, {ORB, BRISK}')

@@ -47,7 +47,7 @@ class Detector:
 
     def _detect_features_using_orb(self, photo):
         if not self._orb:
-            self._orb = cv2.ORB_create(nfeatures=1500,
+            self._orb = cv2.ORB_create(#nfeatures=1500,
                                        edgeThreshold=20,
                                        scaleFactor=1.6,
                                        nlevels=8)
@@ -55,8 +55,8 @@ class Detector:
 
     def _detect_features_using_sift(self, photo):
         if not self._sift:
-            self._sift = cv2.xfeatures2d_SIFT.create(nfeatures=1500,
-                                                     nOctaveLayers=8,
+            self._sift = cv2.xfeatures2d_SIFT.create(#nfeatures=1500,
+                                                     nOctaveLayers=12,
                                                      edgeThreshold=10,
                                                      contrastThreshold=0.03,
                                                      sigma=1.6)
