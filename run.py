@@ -22,7 +22,7 @@ def detect_logo(photo_name: str,
                 match_threshold: int = 50,
                 show_match: bool = True,
                 show_detection: bool = False,
-                in_grayscale: bool = True):
+                in_grayscale=True) -> dict:
     """ Function detecting logos in given photo.
 
     Args:
@@ -59,8 +59,13 @@ def detect_logo(photo_name: str,
                                            logo_descriptors,
                                            photo_descriptors)
 
-        print("\nNumber of good matches between input and logo '", Fore.GREEN if len(good_matches)
-              > match_threshold else Fore.RED, logo_name, Style.RESET_ALL, "' is equal to", len(good_matches))
+        if not logo_name in tresholds.keys():  # TODO: move to other place and then remove match_treshold from arguments
+           tresholds[logo_name] = match_threshold
+
+        match_threshold = tresholds[logo_name]
+
+        print("\nNumber of good matches between input and logo '", Fore.GREEN if len(good_matches) >
+              match_threshold else Fore.RED, logo_name, Style.RESET_ALL, "' is equal to", len(good_matches))
 
         if len(good_matches) > match_threshold:
             print(f'Found logo {logo_name}: {len(good_matches)}/{match_threshold}')
@@ -122,8 +127,8 @@ def show_matched_logo(good_matches,
                                      matchColor=(0, 255, 0),
                                      singlePointColor=None,
                                      matchesMask=matchesMask,
-                                     flags=cv2.DRAW_MATCHES_FLAGS_NOT_DRAW_SINGLE_POINTS
-                                     #  flags=cv2.DRAW_MATCHES_FLAGS_DEFAULT
+                                      flags=cv2.DRAW_MATCHES_FLAGS_NOT_DRAW_SINGLE_POINTS
+                                    #  flags=cv2.DRAW_MATCHES_FLAGS_DEFAULT
                                      )
 
     if show_detection:
@@ -159,8 +164,8 @@ def create_good_matches(matching_method, detection_method, logo_descriptors, pho
     else:
         # matches.sort(key=lambda x: x[0].distance, reverse=True)
         return [match[0] for match in matches
-                if len(match) == 2 and
-                match[0].distance < 0.7 * match[1].distance]
+                if len(match) == 2
+                and match[0].distance < 0.7 * match[1].distance]
 
 
 def match_descriptors(method, detection_method, logo_descriptors, photo_descriptors):
