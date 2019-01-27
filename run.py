@@ -286,8 +286,7 @@ def test_all_from_dir(directory_in_str, tresholds, should_print_info=False):
         filename = os.fsdecode(file)
         if filename.endswith(".jpg"): # or filename.endswith(".png"):
             file_path = os.path.join('all_pics', logo_to_detect, filename)
-            dl = detect_logo(
-                file_path,
+            dl = detect_logo(file_path,
                 *get_logo_names(),
                 tresholds=tresholds,
                 detection_method=KPD.ORB,
@@ -296,15 +295,6 @@ def test_all_from_dir(directory_in_str, tresholds, should_print_info=False):
                 show_match=False,
                 show_detection=False,
                 in_grayscale=False)
-
-            ''' if not dl == {} and logo_to_detect == max(dl, key=dl.get):  # in dl.keys():
-                # TP
-                tp += 1
-            else:
-                if not dl == {}:
-                    fp += len(dl.keys())  # TODO: change to add +1 to FP for each falsely detected logo
-                fn += 1
-                fn_images_list.append(os.path.join(directory_in_str, filename))'''
 
             # compute confusion matrixes info
             if dl == {}:
@@ -372,9 +362,7 @@ def optimize():
     new_tresholds = {}
     subfolders_names = ['biedronka', 'zabka']  # [f.name for f in os.scandir('data\\all_pics') if f.is_dir()]
 
-    while True: # not tresholds == new_tresholds:
-        # if new_tresholds == {}:
-        #     new_tresholds = tresholds
+    while True:
         cms = init_confusion_matrices()
 
         for name in subfolders_names:
@@ -392,6 +380,7 @@ def optimize():
     print(Fore.BLUE, ' # Optimization finished !!!')
     print('Optimized tresholds:', new_tresholds)
     save_tresholds(new_tresholds)
+
 
 
 # Starbucks

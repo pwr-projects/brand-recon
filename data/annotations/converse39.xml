@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<annotation>
+<folder>VOC2007</folder>
+<filename>converse39.jpg</filename>
+<source>
+<database>WeblogoDatabase</database>
+<annotation>PASCAL VOC2007</annotation>
+<image>twitter</image>
+<flickrid>none</flickrid>
+</source>
+<owner>
+<flickrid>none</flickrid>
+<name>none</name>
+</owner>
+<size>
+<width>460</width>
+<height>460</height>
+<depth>3</depth>
+</size>
+<segmented>0</segmented>
+<object>
+<name>converse</name>
+<pose>Unspecified</pose>
+<truncated>0</truncated>
+<difficult>0</difficult>
+<bndbox>
+<xmin>308</xmin>
+<ymin>188</ymin>
+<xmax>378</xmax>
+<ymax>260</ymax>
+</bndbox>
+</object>
+</annotation>

@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<annotation>
+<folder>VOC2007</folder>
+<filename>mitsubishi28.jpg</filename>
+<source>
+<database>WeblogoDatabase</database>
+<annotation>PASCAL VOC2007</annotation>
+<image>twitter</image>
+<flickrid>none</flickrid>
+</source>
+<owner>
+<flickrid>none</flickrid>
+<name>none</name>
+</owner>
+<size>
+<width>970</width>
+<height>544</height>
+<depth>3</depth>
+</size>
+<segmented>0</segmented>
+<object>
+<name>mitsubishi</name>
+<pose>Unspecified</pose>
+<truncated>0</truncated>
+<difficult>0</difficult>
+<bndbox>
+<xmin>752</xmin>
+<ymin>393</ymin>
+<xmax>785</xmax>
+<ymax>422</ymax>
+</bndbox>
+</object>
+</annotation>

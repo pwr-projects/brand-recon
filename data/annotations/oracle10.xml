@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<annotation>
+<folder>VOC2007</folder>
+<filename>oracle10.jpg</filename>
+<source>
+<database>WeblogoDatabase</database>
+<annotation>PASCAL VOC2007</annotation>
+<image>twitter</image>
+<flickrid>none</flickrid>
+</source>
+<owner>
+<flickrid>none</flickrid>
+<name>none</name>
+</owner>
+<size>
+<width>560</width>
+<height>315</height>
+<depth>3</depth>
+</size>
+<segmented>0</segmented>
+<object>
+<name>oracle</name>
+<pose>Unspecified</pose>
+<truncated>0</truncated>
+<difficult>0</difficult>
+<bndbox>
+<xmin>77</xmin>
+<ymin>92</ymin>
+<xmax>281</xmax>
+<ymax>128</ymax>
+</bndbox>
+</object>
+</annotation>

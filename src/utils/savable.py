@@ -9,17 +9,13 @@ from ..config import *
 
 def save(data, path: str):
     with open(path, 'wb') as fhnd:
-        print(f'Saving to {path}', end='...')
         pickle.dump(data, fhnd)
-        print('OK')
     return data
 
 
 def load(path: str):
     with open(path, 'rb') as fhnd:
-        print(f'Loading from {path}', end='...')
         data = pickle.load(fhnd, fix_imports=True)
-        print('OK')
     return data
 
 

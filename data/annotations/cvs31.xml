@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<annotation>
+<folder>VOC2007</folder>
+<filename>cvs31.jpg</filename>
+<source>
+<database>WeblogoDatabase</database>
+<annotation>PASCAL VOC2007</annotation>
+<image>twitter</image>
+<flickrid>none</flickrid>
+</source>
+<owner>
+<flickrid>none</flickrid>
+<name>none</name>
+</owner>
+<size>
+<width>858</width>
+<height>644</height>
+<depth>3</depth>
+</size>
+<segmented>0</segmented>
+<object>
+<name>cvs</name>
+<pose>Unspecified</pose>
+<truncated>0</truncated>
+<difficult>0</difficult>
+<bndbox>
+<xmin>149</xmin>
+<ymin>282</ymin>
+<xmax>282</xmax>
+<ymax>348</ymax>
+</bndbox>
+</object>
+</annotation>

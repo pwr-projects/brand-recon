@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<annotation>
+<folder>VOC2007</folder>
+<filename>spiderman10.jpg</filename>
+<source>
+<database>WeblogoDatabase</database>
+<annotation>PASCAL VOC2007</annotation>
+<image>twitter</image>
+<flickrid>none</flickrid>
+</source>
+<owner>
+<flickrid>none</flickrid>
+<name>none</name>
+</owner>
+<size>
+<width>480</width>
+<height>360</height>
+<depth>3</depth>
+</size>
+<segmented>0</segmented>
+<object>
+<name>spiderman</name>
+<pose>Unspecified</pose>
+<truncated>0</truncated>
+<difficult>0</difficult>
+<bndbox>
+<xmin>15</xmin>
+<ymin>139</ymin>
+<xmax>41</xmax>
+<ymax>167</ymax>
+</bndbox>
+</object>
+</annotation>

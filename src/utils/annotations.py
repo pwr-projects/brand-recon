@@ -11,11 +11,12 @@ def get_annotations() -> Mapping[str, str]:
     files = os.listdir(PATH_ANNOTATIONS)
     files = map(lambda path: pj(PATH_ANNOTATIONS, path), filter(isxml, files))
     file_logo = {}
-
-    for path in tqm(files, 'Parsing annotations'):
+    
+    for path in tqdm(files, 'Parsing annotations', dynamic_ncols=True):
         with open(path, 'r') as fhd:
             header = '<?xml version="1.0"?>'
             lines = fhd.readlines()
+
             if not lines[0].startswith(header):
                 lines.insert(0, '{}\n'.format(header))
 

@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<annotation>
+<folder>VOC2007</folder>
+<filename>recycling15.jpg</filename>
+<source>
+<database>WeblogoDatabase</database>
+<annotation>PASCAL VOC2007</annotation>
+<image>twitter</image>
+<flickrid>none</flickrid>
+</source>
+<owner>
+<flickrid>none</flickrid>
+<name>none</name>
+</owner>
+<size>
+<width>800</width>
+<height>533</height>
+<depth>3</depth>
+</size>
+<segmented>0</segmented>
+<object>
+<name>recycling</name>
+<pose>Unspecified</pose>
+<truncated>0</truncated>
+<difficult>0</difficult>
+<bndbox>
+<xmin>440</xmin>
+<ymin>109</ymin>
+<xmax>579</xmax>
+<ymax>238</ymax>
+</bndbox>
+</object>
+</annotation>
