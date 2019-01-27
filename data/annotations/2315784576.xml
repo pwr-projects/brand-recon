@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<annotation>
+<folder>VOC2007</folder>
+<filename>2315784576.jpg</filename>
+<source>
+<database>WeblogoDatabase</database>
+<annotation>PASCAL VOC2007</annotation>
+<image>twitter</image>
+<flickrid>none</flickrid>
+</source>
+<owner>
+<flickrid>none</flickrid>
+<name>none</name>
+</owner>
+<size>
+<width>1024</width>
+<height>809</height>
+<depth>3</depth>
+</size>
+<segmented>0</segmented>
+<object>
+<name>erdinger</name>
+<pose>Unspecified</pose>
+<truncated>0</truncated>
+<difficult>0</difficult>
+<bndbox>
+<xmin>559</xmin>
+<ymin>89</ymin>
+<xmax>964</xmax>
+<ymax>467</ymax>
+</bndbox>
+</object>
+</annotation>

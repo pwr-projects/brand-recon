@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<annotation>
+<folder>VOC2007</folder>
+<filename>3711181117.jpg</filename>
+<source>
+<database>WeblogoDatabase</database>
+<annotation>PASCAL VOC2007</annotation>
+<image>twitter</image>
+<flickrid>none</flickrid>
+</source>
+<owner>
+<flickrid>none</flickrid>
+<name>none</name>
+</owner>
+<size>
+<width>333</width>
+<height>500</height>
+<depth>3</depth>
+</size>
+<segmented>0</segmented>
+<object>
+<name>ferrari</name>
+<pose>Unspecified</pose>
+<truncated>0</truncated>
+<difficult>0</difficult>
+<bndbox>
+<xmin>131</xmin>
+<ymin>276</ymin>
+<xmax>203</xmax>
+<ymax>393</ymax>
+</bndbox>
+</object>
+</annotation>

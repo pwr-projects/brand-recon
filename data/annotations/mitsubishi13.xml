@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<annotation>
+<folder>VOC2007</folder>
+<filename>mitsubishi13.jpg</filename>
+<source>
+<database>WeblogoDatabase</database>
+<annotation>PASCAL VOC2007</annotation>
+<image>twitter</image>
+<flickrid>none</flickrid>
+</source>
+<owner>
+<flickrid>none</flickrid>
+<name>none</name>
+</owner>
+<size>
+<width>620</width>
+<height>413</height>
+<depth>3</depth>
+</size>
+<segmented>0</segmented>
+<object>
+<name>mitsubishi</name>
+<pose>Unspecified</pose>
+<truncated>0</truncated>
+<difficult>0</difficult>
+<bndbox>
+<xmin>274</xmin>
+<ymin>50</ymin>
+<xmax>353</xmax>
+<ymax>174</ymax>
+</bndbox>
+</object>
+</annotation>

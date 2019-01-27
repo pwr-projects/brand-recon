@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<annotation>
+<folder>VOC2007</folder>
+<filename>Gucci22.jpg</filename>
+<source>
+<database>WeblogoDatabase</database>
+<annotation>PASCAL VOC2007</annotation>
+<image>twitter</image>
+<flickrid>none</flickrid>
+</source>
+<owner>
+<flickrid>none</flickrid>
+<name>none</name>
+</owner>
+<size>
+<width>558</width>
+<height>535</height>
+<depth>3</depth>
+</size>
+<segmented>0</segmented>
+<object>
+<name>gucci</name>
+<pose>Unspecified</pose>
+<truncated>0</truncated>
+<difficult>0</difficult>
+<bndbox>
+<xmin>345</xmin>
+<ymin>152</ymin>
+<xmax>397</xmax>
+<ymax>516</ymax>
+</bndbox>
+</object>
+</annotation>

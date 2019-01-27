@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<annotation>
+<folder>VOC2007</folder>
+<filename>allianz13.jpg</filename>
+<source>
+<database>WeblogoDatabase</database>
+<annotation>PASCAL VOC2007</annotation>
+<image>twitter</image>
+<flickrid>none</flickrid>
+</source>
+<owner>
+<flickrid>none</flickrid>
+<name>none</name>
+</owner>
+<size>
+<width>569</width>
+<height>236</height>
+<depth>3</depth>
+</size>
+<segmented>0</segmented>
+<object>
+<name>allianz</name>
+<pose>Unspecified</pose>
+<truncated>0</truncated>
+<difficult>0</difficult>
+<bndbox>
+<xmin>427</xmin>
+<ymin>4</ymin>
+<xmax>566</xmax>
+<ymax>144</ymax>
+</bndbox>
+</object>
+</annotation>

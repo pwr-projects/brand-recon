@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<annotation>
+<folder>VOC2007</folder>
+<filename>subway12.jpg</filename>
+<source>
+<database>WeblogoDatabase</database>
+<annotation>PASCAL VOC2007</annotation>
+<image>twitter</image>
+<flickrid>none</flickrid>
+</source>
+<owner>
+<flickrid>none</flickrid>
+<name>none</name>
+</owner>
+<size>
+<width>604</width>
+<height>305</height>
+<depth>3</depth>
+</size>
+<segmented>0</segmented>
+<object>
+<name>subway</name>
+<pose>Unspecified</pose>
+<truncated>0</truncated>
+<difficult>0</difficult>
+<bndbox>
+<xmin>373</xmin>
+<ymin>129</ymin>
+<xmax>581</xmax>
+<ymax>199</ymax>
+</bndbox>
+</object>
+</annotation>

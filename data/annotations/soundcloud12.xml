@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<annotation>
+<folder>VOC2007</folder>
+<filename>soundcloud12.jpg</filename>
+<source>
+<database>WeblogoDatabase</database>
+<annotation>PASCAL VOC2007</annotation>
+<image>twitter</image>
+<flickrid>none</flickrid>
+</source>
+<owner>
+<flickrid>none</flickrid>
+<name>none</name>
+</owner>
+<size>
+<width>640</width>
+<height>960</height>
+<depth>3</depth>
+</size>
+<segmented>0</segmented>
+<object>
+<name>soundcloud</name>
+<pose>Unspecified</pose>
+<truncated>0</truncated>
+<difficult>0</difficult>
+<bndbox>
+<xmin>417</xmin>
+<ymin>811</ymin>
+<xmax>625</xmax>
+<ymax>948</ymax>
+</bndbox>
+</object>
+</annotation>

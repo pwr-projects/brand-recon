@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<annotation>
+<folder>VOC2007</folder>
+<filename>levis19.jpg</filename>
+<source>
+<database>WeblogoDatabase</database>
+<annotation>PASCAL VOC2007</annotation>
+<image>twitter</image>
+<flickrid>none</flickrid>
+</source>
+<owner>
+<flickrid>none</flickrid>
+<name>none</name>
+</owner>
+<size>
+<width>385</width>
+<height>500</height>
+<depth>3</depth>
+</size>
+<segmented>0</segmented>
+<object>
+<name>levis</name>
+<pose>Unspecified</pose>
+<truncated>0</truncated>
+<difficult>0</difficult>
+<bndbox>
+<xmin>142</xmin>
+<ymin>132</ymin>
+<xmax>253</xmax>
+<ymax>184</ymax>
+</bndbox>
+</object>
+</annotation>
