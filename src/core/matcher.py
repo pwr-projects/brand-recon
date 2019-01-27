@@ -3,17 +3,30 @@ from typing import Sequence
 
 import cv2
 
-from .consts import *
-
+from ..consts import *
+import numpy as np
+from itertools import chain
 
 class Matcher:
     def __init__(self, kpm: KPM, *kpds: Sequence[KPD]):
         self._kpds = kpds
         self._kpm = kpm
 
-    def __call__(self, logo_descs, photo_descs):
-        matcher_function = self._match(logo_descs, photo_descs)
-        return self._filter_matches(matcher_function)
+    def __call__(self, logo_descs, photo_descs, treshold):
+        matcheses = []
+        _photo_descs = photo_descs.copy()
+        while True:
+            matcher_function = self._match(logo_descs, _photo_descs)
+            matches = self._filter_matches(matcher_function)
+            if len(matches) < treshold:
+                break
+            print(f'Found logo with {len(matches)} common keypoints')
+            print(f'Remaining {len(_photo_descs)} descriptors')
+
+            matches_ids = list(map(lambda match: match.trainIdx, matches))
+            matcheses.append(matches)
+            _photo_descs = np.asarray([photo_desc for idx, photo_desc in enumerate(_photo_descs) if idx not in matches_ids])
+        return matcheses
 
     def _filter_matches(self, matches):
         if len(matches) > 0 and hasattr(matches[0], 'distance'):
@@ -22,8 +35,8 @@ class Matcher:
         else:
             matches.sort(key=lambda x: x[0].distance, reverse=True)
             return [match[0] for match in matches
-                    if len(match) == 2 and
-                    match[0].distance < 0.7 * match[1].distance]
+                    if len(match) == 2
+                    and match[0].distance < 0.5 * match[1].distance]
 
     def _match(self, *args):
         return {KPM.BF: self._match_with_bf,
@@ -31,7 +44,7 @@ class Matcher:
 
     def _match_with_flann(self, *args):
         if all([kpd in (KPD.SIFT, KPD.SURF) for kpd in self._kpds]):
-            index_params = dict(algorithm=0, trees=50)
+            index_params = dict(algorithm=0, trees=10)
             search_params = dict(checks=500)
 
         elif all([kpd in (KPD.BRISK, KPD.ORB) for kpd in self._kpds]):
@@ -42,6 +55,7 @@ class Matcher:
             search_params = dict(checks=500)
         else:
             raise Exception('Pass subset of {SIFT, SURF}, {ORB, BRISK}')
+
         flann = cv2.FlannBasedMatcher(index_params, search_params)
         return flann.knnMatch(*args, k=2, compactResult=True)
 

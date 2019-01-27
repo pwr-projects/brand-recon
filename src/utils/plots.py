@@ -1,6 +1,5 @@
 import cv2
-from .utils import *
-
+from .images import *
 
 def draw_matches(logo, logo_kps, img, img_kps, matches, matches_mask, draw_all=False, show=False):
     flags = cv2.DRAW_MATCHES_FLAGS_DEFAULT if draw_all else cv2.DRAW_MATCHES_FLAGS_NOT_DRAW_SINGLE_POINTS
