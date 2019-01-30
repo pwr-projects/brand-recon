@@ -1,16 +1,16 @@
-from functools import partial
 from typing import Sequence
 
 import cv2
+import numpy as np
 
 from ..consts import *
-import numpy as np
-from itertools import chain
+
 
 class Matcher:
-    def __init__(self, kpm: KPM, *kpds: Sequence[KPD]):
+    def __init__(self, kpm: KPM, *kpds: Sequence[KPD], tresh_factor=0.65):
         self._kpds = kpds
         self._kpm = kpm
+        self._tresh_factor = tresh_factor
 
     def __call__(self, logo_descs, photo_descs, treshold):
         matcheses = []
@@ -36,7 +36,7 @@ class Matcher:
             matches.sort(key=lambda x: x[0].distance, reverse=True)
             return [match[0] for match in matches
                     if len(match) == 2
-                    and match[0].distance < 0.5 * match[1].distance]
+                    and match[0].distance < self._tresh_factor * match[1].distance]
 
     def _match(self, *args):
         return {KPM.BF: self._match_with_bf,

@@ -1,9 +1,10 @@
 
+import json
 import pickle
 from functools import wraps
 from os.path import exists
-from os.path import join as pj
 
+from src.utils import images
 from ..config import *
 
 
@@ -36,3 +37,21 @@ def savable(what: str):
             return save(func(*args, **kwargs), save_load_path)
         return wrapper
     return real_decorator
+
+
+def save_tresholds(tresholds):
+    fh = open(PATH_TRESHOLDS, 'w+')
+    json.dump(tresholds, fh)
+
+
+def load_tresholds():
+    try:
+        fh = open(PATH_TRESHOLDS, 'r')
+        tresholds = json.load(fh)
+    except:
+        print("Initializing thresholds")
+        tresholds = {}
+        names = images.get_possible_logo_names()
+        for name in names:
+            tresholds[name] = 10
+    return tresholds

@@ -1,12 +1,10 @@
-from tqdm import tqdm
-from functools import partial
-
 import re
-from enum import Enum, auto
+from functools import partial
 from os.path import join as pj
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 from .consts import KPD, KPM
 
@@ -35,7 +33,7 @@ DIR_PERSISTED = 'persisted'
 PATH_LOGO = pj(DIR_DATASET, DIR_LOGO)
 PATH_PHOTOS = pj(DIR_DATASET, DIR_PHOTOS)
 PATH_ANNOTATIONS = pj(DIR_DATASET, DIR_ANNOTATIONS)
-PATH_TRESHOLDS = lambda init_value: pj(DIR_DATASET, DIR_PERSISTED, f'tresholds{init_value}.json')
+PATH_TRESHOLDS = pj(DIR_DATASET, DIR_PERSISTED, 'tresholds.json')
 
 # SAVABLE
 SAVABLE_LOGO_FEATURES = 'logo_features'

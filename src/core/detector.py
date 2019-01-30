@@ -1,15 +1,11 @@
-from functools import partial
 from itertools import chain
 
-import cv2
-import numpy as np
-
-from ..config import *
 from ..features import *
 
 
 class Detector:
-    def __init__(self, *kpds: KPD):
+    def __init__(self, *kpds: KPD, nOctLay=4, nOct=4, hesThresh=100, ext=True, nfeat=1000, eThresh=10, cThresh=0.03,
+                 sigma=1.6):
         assert(all([kpd in (KPD.SIFT, KPD.SURF) for kpd in kpds]) or all(
             [kpd in (KPD.ORB, KPD.BRISK) for kpd in kpds]),
             'Pass subset of {SIFT, SURF}, {ORB, BRISK}')
@@ -19,6 +15,14 @@ class Detector:
         self._surf = None
         self._orb = None
         self._sift = None
+        self._nOctLay = nOctLay
+        self._nOct = nOct
+        self._hesThresh = hesThresh
+        self._ext = ext
+        self._nfeat = nfeat
+        self._eThresh = eThresh
+        self._cThresh = cThresh
+        self._sigma = sigma
 
     def __call__(self, photo):
         features = [method(photo) for method in self._detector_methods]
@@ -47,19 +51,19 @@ class Detector:
 
     def _detect_features_using_surf(self, photo):
         if not self._surf:
-            self._surf = cv2.xfeatures2d_SURF.create(hessianThreshold=100,
-                                                     nOctaves=4,
-                                                     nOctaveLayers=4,
-                                                     extended=True)
-        return self._surf.detectAndCompute(photo, None)
+            self._surf = cv2.xfeatures2d_SURF.create(hessianThreshold=self._hesThresh,
+                                                     nOctaves=self._nOct,
+                                                     nOctaveLayers=self._nOctLay,
+                                                     extended=self._ext)
 
     def _detect_features_using_sift(self, photo):
         if not self._sift:
-            self._sift = cv2.xfeatures2d_SIFT.create(  # nfeatures=1500,
-                nOctaveLayers=12,
-                edgeThreshold=10,
-                contrastThreshold=0.03,
-                sigma=1.6)
+            self._sift = cv2.xfeatures2d_SIFT.create(
+                nfeatures=self._nfeat,
+                nOctaveLayers=self._nOctLay,
+                edgeThreshold=self._eThresh,
+                contrastThreshold=self._cThresh,
+                sigma=self._sigma)
         return self._sift.detectAndCompute(photo, None)
 
     def _merge_keypoints(self, *features):
