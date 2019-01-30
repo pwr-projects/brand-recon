@@ -1,4 +1,4 @@
-from collections import namedtuple
+'''from collections import namedtuple
 
 import cv2
 
@@ -50,3 +50,4 @@ def get_detector(method):
     }
 
     return method_funcs[method]()
+'''

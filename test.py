@@ -1,19 +1,14 @@
 #!/bin/python
 # %%
-import multiprocessing as mp
-from itertools import chain
-
-import numpy as np
 
 from src import *
+from src.core import Detector
 
-try:
-    get_ipython().run_line_magic('load_ext', 'autoreload')
-    get_ipython().run_line_magic('autoreload', '2')
-except NameError:
-    pass
+print(Fore.BLUE, " ### Started test")
 
+print(Fore.BLUE, " #$ Start: Getting annotations")
 annotations = get_annotations()
+print(Fore.BLUE, " #! End: Getting annotations\n")
 
 # kpds = [KPD.ORB, KPD.BRISK]
 kpds = [KPD.SIFT, KPD.SURF]
@@ -21,23 +16,33 @@ kpds = [KPD.SIFT, KPD.SURF]
 detector = Detector(*kpds)
 matcher = Matcher(KPM.FLANN, *kpds)
 # %%
-TEST_LOGO = 'biedronka'
+TEST_LOGO = 'lot'
 GRAYSCALE = False
 
 found_logos = {}
-photos_with_logos = get_photos_with_logo(TEST_LOGO, annotations)[:3]
-logo_photo = get_logo_photo_by_name(TEST_LOGO, GRAYSCALE)
-logo_feats = detector(logo_photo)
+print(Fore.BLUE, " #$ Start: Getting photos with logo")
+photos_with_logos = get_photos_with_logo(TEST_LOGO, annotations)[:]
+print(Fore.BLUE, " #! End: Getting photos with logo\n")
 
-    
+print(Fore.BLUE, " #$ Start: Getting logo photo by name")
+logo_photo = get_logo_photo_by_name(TEST_LOGO, GRAYSCALE)
+print(Fore.BLUE, " #! End: Getting logo photo by name\n")
+
+print(Fore.BLUE, " #$ Start: Getting features of logo")
+logo_feats = detector(logo_photo)
+print(Fore.BLUE, " #! End: Getting features of logo\n")
+
+
 def test(test_photo_name):
     test_photo_path = imgpath(test_photo_name)
     test_photo = img_load(test_photo_path, GRAYSCALE)
     # img_show(test_photo)
     test_photo_feats = detector(test_photo)
 
-    matcheses = matcher(logo_feats.descriptors, test_photo_feats.descriptors, len(logo_feats.keypoints) * 0.03)
-    print('Found', len(matcheses), 'logos')
+    treshold = len(logo_feats.keypoints) * 0.015
+    print(" -- # Treshold:", treshold)
+    matcheses = matcher(logo_feats.descriptors, test_photo_feats.descriptors, treshold)
+    print('Found', len(matcheses), 'logos in:', test_photo_name)
 
     test_photo_copy = test_photo.copy()
     for matches in matcheses:
@@ -51,10 +56,21 @@ def test(test_photo_name):
                                             True)
     # img_show(test_photo_copy)
     return test_photo_path, (test_photo_copy, len(matcheses))
-#%%
-with mp.Pool(mp.cpu_count()) as pool:
-    found_logos = {val[0]: (*val[1:],) for val in pool.map(test, photos_with_logos)}
 
+
+# %%
+print(Fore.BLUE, " #$ Start: Finding logos")
+# with mp.Pool(mp.cpu_count()) as pool:
+#     found_logos = {val[0]: (*val[1:],) for val in pool.map(test, photos_with_logos)}
+found_logos = []
+for photo in photos_with_logos:
+    try:
+        fl = test(photo)
+        found_logos.append(fl)
+    except Exception:
+        print("Exception occured")
+found_logos = {val[0]: (*val[1:],) for val in found_logos}
+print(Fore.BLUE, " #! End: Finding logos\n")
 
 # %%
 for img in found_logos.values():

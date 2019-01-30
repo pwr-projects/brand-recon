@@ -1,10 +1,7 @@
 #!/usr/bin/python
 # %%
 
-import json
-
-import numpy as np
-from colorama import Fore, Style
+from colorama import Style
 
 from src import *
 
@@ -94,7 +91,7 @@ def show_matched_logo(good_matches,
                       in_grayscale=False):
 
     photo_copy = img_load(photo_path, in_grayscale=in_grayscale)
-    pattern = get_logo_by_name(logo_name, in_grayscale=in_grayscale)
+    pattern = get_logo_photo_by_name(logo_name, in_grayscale=in_grayscale)
 
     h, w = pattern.shape[:2]
 
@@ -198,7 +195,7 @@ def match_descriptors(method, detection_method, logo_descriptors, photo_descript
 
 
 def get_logos_with_features(method, *logo_names):
-    logo_names = logo_names if logo_names else get_logo_names()
+    logo_names = logo_names if logo_names else images.get_logo_names()
     logos = get_logo_features(method, False, *logo_names)
     # logos = tqdm(logos.items(), desc='Logo', disable=not (len(logo_names) > 1 and VERBOSE))
     return logos.items()
@@ -253,7 +250,7 @@ def run_in_loop(**kwargs):
     action = input("# Type:\n - 'c' to close the program\n - 'name_of_file' to detect logos in file: ")
     while action != 'c':
         print("# Started logo detection")
-        detect_logo(action, *get_logo_names(), **kwargs)
+        detect_logo(action, *images.get_logo_names(), **kwargs)
         print("# Finished logo detection")
         action = input("# Type:\n - 'c' to close the program\n - 'name_of_file' to detect logos in file: ")
     print("### Closing program ###")
@@ -270,9 +267,9 @@ def load_tresholds():
         tresholds = json.load(fh)
     except:
         tresholds = {}
-        names = get_logo_names()
+        names = images.get_logo_names()
         for name in names:
-            tresholds[name] = 25
+            tresholds[name] = 10
     return tresholds
 
 
@@ -286,8 +283,9 @@ def test_all_from_dir(directory_in_str, tresholds, should_print_info=False):
         filename = os.fsdecode(file)
         if filename.endswith(".jpg"): # or filename.endswith(".png"):
             file_path = os.path.join('all_pics', logo_to_detect, filename)
-            dl = detect_logo(file_path,
-                *get_logo_names(),
+            dl = detect_logo(
+                file_path,
+                *images.get_logo_names(),
                 tresholds=tresholds,
                 detection_method=KPD.ORB,
                 matching_method=KPM.FLANN,
@@ -295,6 +293,15 @@ def test_all_from_dir(directory_in_str, tresholds, should_print_info=False):
                 show_match=False,
                 show_detection=False,
                 in_grayscale=False)
+
+            ''' if not dl == {} and logo_to_detect == max(dl, key=dl.get):  # in dl.keys():
+                # TP
+                tp += 1
+            else:
+                if not dl == {}:
+                    fp += len(dl.keys())  # TODO: change to add +1 to FP for each falsely detected logo
+                fn += 1
+                fn_images_list.append(os.path.join(directory_in_str, filename))'''
 
             # compute confusion matrixes info
             if dl == {}:
@@ -307,7 +314,7 @@ def test_all_from_dir(directory_in_str, tresholds, should_print_info=False):
                 for name in dl.keys():
                     if not name == logo_to_detect:
                         local_cms[name][2] += 1
-            for name in get_logo_names():
+            for name in images.get_logo_names():
                 if not name == logo_to_detect and not name in dl.keys():
                     local_cms[name][1] += 1
 
@@ -323,7 +330,7 @@ def test_all_from_dir(directory_in_str, tresholds, should_print_info=False):
 
 def init_confusion_matrices():
     cms = {}
-    names = get_logo_names()
+    names = images.get_logo_names()
     for name in names:
         # Confusion matrix for each logo as list: [TP, TN, FP, FN]
         cms[name] = [0, 0, 0, 0]
@@ -380,7 +387,6 @@ def optimize():
     print(Fore.BLUE, ' # Optimization finished !!!')
     print('Optimized tresholds:', new_tresholds)
     save_tresholds(new_tresholds)
-
 
 
 # Starbucks

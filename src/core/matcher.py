@@ -19,6 +19,7 @@ class Matcher:
             matcher_function = self._match(logo_descs, _photo_descs)
             matches = self._filter_matches(matcher_function)
             if len(matches) < treshold:
+                #print(f'Found no logo. Only {len(matches)} common keypoints')
                 break
             print(f'Found logo with {len(matches)} common keypoints')
             print(f'Remaining {len(_photo_descs)} descriptors')

@@ -1,11 +1,5 @@
-import json
-import os
-from os.path import join as pj
-from typing import Mapping
-
 from colorama import Fore
 
-from ..config import *
 from ..utils import *
 
 
@@ -23,37 +17,39 @@ class CM:
         return new_cms
 
 
+def load_tresholds() -> dict:
+    tresh_path = PATH_TRESHOLDS()
+    if os.path.isfile(tresh_path):
+        with open(tresh_path, 'r') as fhd:
+            return json.load(fhd)
+    else:
+        return {name: 10 for name in get_possible_logo_names()}
+
+
+def update_tresholds(tresholds: dict, cm: dict) -> dict:
+    new_tresholds = tresholds.copy()
+    all_imgs_nr = sum([sum(cm[name]) for name in new_tresholds.keys()])
+
+    for name in new_tresholds.keys():
+        logo_imgs_nr = sum(cm[name])
+        fp_rate = cm[name][2] / (all_imgs_nr - logo_imgs_nr)
+        fn_rate = cm[name][3] / logo_imgs_nr
+
+        # optimization criterion
+        if fn_rate < fp_rate:
+            new_tresholds[name] += 1
+
+    return new_tresholds
+
+
 class Optimizer:
     def __init__(self, init_value: int = 25):
-        self._tresholds = self.load_tresholds()
+        self._tresholds = load_tresholds()
         self._init_value = init_value
 
     def save_tresholds(self):
-        with open(PATH_TRESHOLDS(self._init_value), 'w+') as fhd:
+        with open(PATH_TRESHOLDS, 'w+') as fhd:
             json.dump(self._tresholds, fhd)
-
-    def load_tresholds(self) -> dict:
-        tresh_path = PATH_TRESHOLDS(self._init_value)
-        if os.path.isfile(tresh_path):
-            with open(tresh_path, 'r') as fhd:
-                return json.load(fhd)
-        else:
-            return {name: init_value for name in get_possible_logo_names()}
-
-    def update_tresholds(self, tresholds: dict, cm: dict) -> dict:
-        new_tresholds = tresholds.copy()
-        all_imgs_nr = sum([sum(cm[name]) for name in new_tresholds.keys()])
-
-        for name in new_tresholds.keys():
-            logo_imgs_nr = sum(cm[name])
-            fp_rate = cm[name][2] / (all_imgs_nr - logo_imgs_nr)
-            fn_rate = cm[name][3] / logo_imgs_nr
-
-            # optimization criterion
-            if fn_rate < fp_rate:
-                new_tresholds[name] += 1
-
-        return new_tresholds
 
     def __call__(self, annotations, *logo_names):
          # TODO: adjust to optimize tresholds for each method (maybe separate file for each method and  just pass the treshold_file names as an attribute)
