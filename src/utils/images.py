@@ -1,14 +1,9 @@
-import os
-import re
 from collections import defaultdict
-from functools import partial
-from typing import Mapping, Sequence
+from typing import Sequence
 
 import cv2
-import matplotlib.pyplot as plt
 import numpy as np
 
-from ..config import *
 from .annotations import *
 from .misc import *
 
@@ -28,7 +23,7 @@ def img_load(path: str, in_grayscale: bool) -> np.ndarray:
 
 
 def img_show(img: np.ndarray, ax=plt, **kwargs) -> plt.Axes:
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)  # imread(img, 0)
     ax = ax.imshow(img, **kwargs)
     plt.axis('off')
     plt.show()

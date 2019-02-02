@@ -9,7 +9,6 @@ class Detector:
         assert(all([kpd in (KPD.SIFT, KPD.SURF) for kpd in kpds]) or all(
             [kpd in (KPD.ORB, KPD.BRISK) for kpd in kpds]),
             'Pass subset of {SIFT, SURF}, {ORB, BRISK}')
-        self._kpd = kpds
         self._detector_methods = list(map(self._detector_method, kpds))
         self._brisk = None
         self._surf = None
@@ -55,6 +54,7 @@ class Detector:
                                                      nOctaves=self._nOct,
                                                      nOctaveLayers=self._nOctLay,
                                                      extended=self._ext)
+            return self._surf.detectAndCompute(photo, None)
 
     def _detect_features_using_sift(self, photo):
         if not self._sift:

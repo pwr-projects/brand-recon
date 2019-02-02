@@ -3,10 +3,10 @@
 
 from src import *
 
-kpds = [KPD.SIFT] #, KPD.SURF]
+kpds = [KPD.SIFT]
 
 d = detector.Detector(*kpds, nOctLay=3, nOct=4, hesThresh=100, ext=True, nfeat=10000, eThresh=20, cThresh=0.03, sigma=2.5)
-m = matcher.Matcher(KPM.FLANN, *kpds, tresh_factor=0.73)
+m = matcher.Matcher(KPM.FLANN, *kpds, tresh_factor=0.72)
 eval = evaluator.Evaluator(d, m, False)
 
 
@@ -21,13 +21,28 @@ lotos_photos = [p for p in all_photos if 'lotos' in p]
 pip_photos = [p for p in all_photos if 'pip' in p]
 doz_photos = [p for p in all_photos if 'doz' in p]
 pko_photos = [p for p in all_photos if 'pko' in p]
+pzu_photos = [p for p in all_photos if 'pzu' in p]
+cobi_photos = [p for p in all_photos if 'cobi' in p]
+sonko_photos = [p for p in all_photos if 'sonko' in p]
+mlekovita_photos = [p for p in all_photos if 'mlekovita' in p]
+pis_photos = [p for p in all_photos if 'pis' in p]
+hm_photos = [p for p in all_photos if 'hm' in p]
+po_photos = [p for p in all_photos if 'po' in p]
+fakt_photos = [p for p in all_photos if 'fakt' in p]
+tyskie_photos = [p for p in all_photos if 'tyskie' in p]
 
-logos = ['biedronka', 'orlen', 'pwr', 'tymbark', 'lotos', 'pip', 'doz', 'pko']  # ['lot', 'biedronka', 'zabka', 'orlen', 'pwr', 'plus']
-photos = pwr_photos+biedronka_photos+orlen_photos+tymbark_photos+pip_photos+lotos_photos+pko_photos+doz_photos # all_photos # (orlen_photos+lot_photos) #  (lot_photos[:10])  # +biedronka_photos[:10])
+logos = ['biedronka', 'orlen', 'pwr', 'tymbark', 'pip', 'pko', 'cobi', 'pis', "fakt", "tyskie"]  # ['lot', 'biedronka', 'zabka', 'orlen', 'pwr', 'plus']
+photos = pwr_photos[15:]+\
+         biedronka_photos[15:]+\
+         orlen_photos[15:]+\
+         tymbark_photos[15:]+\
+         pip_photos[15:]+\
+         pko_photos[15:]+tyskie_photos[15:]+fakt_photos[15:]+\
+         cobi_photos[15:]+pis_photos[15:] # all_photos # (orlen_photos+lot_photos) #  (lot_photos[:10])  # +biedronka_photos[:10]) pzu_photos+\mlekovita_photos+\
 preds = eval.predict(logos, photos, False)  # ['biedronka_img_2.jpg', 'biedronka_img_14.jpg', 'biedronka_img_17.jpg'])
 # print(preds)
 
-hd, cms, rates = eval.eval(logos, preds)
+hd, cms, rates = eval.eval(logos, preds, False)
 print("\n - Hamming dist:", hd)
 print("\n - Conf. matrices:", cms)
 print("\n - Rates:")

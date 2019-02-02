@@ -1,5 +1,6 @@
 from colorama import Fore
 
+from src.core import detector, matcher, Evaluator
 from ..utils import *
 
 
@@ -17,7 +18,7 @@ class CM:
         return new_cms
 
 
-def load_tresholds() -> dict:
+def load_tresholdsa() -> dict:
     tresh_path = PATH_TRESHOLDS()
     if os.path.isfile(tresh_path):
         with open(tresh_path, 'r') as fhd:
@@ -26,23 +27,9 @@ def load_tresholds() -> dict:
         return {name: 10 for name in get_possible_logo_names()}
 
 
-def update_tresholds(tresholds: dict, cm: dict) -> dict:
-    new_tresholds = tresholds.copy()
-    all_imgs_nr = sum([sum(cm[name]) for name in new_tresholds.keys()])
-
-    for name in new_tresholds.keys():
-        logo_imgs_nr = sum(cm[name])
-        fp_rate = cm[name][2] / (all_imgs_nr - logo_imgs_nr)
-        fn_rate = cm[name][3] / logo_imgs_nr
-
-        # optimization criterion
-        if fn_rate < fp_rate:
-            new_tresholds[name] += 1
-
-    return new_tresholds
 
 
-class Optimizer:
+class OptimizerOld:
     def __init__(self, init_value: int = 25):
         self._tresholds = load_tresholds()
         self._init_value = init_value
@@ -115,3 +102,44 @@ class Optimizer:
                     print(Fore.RED, ' - ', f)
 
         return local_cms
+
+
+def update_tresholds(tresholds: dict, rates: dict) -> dict:
+    new_tresholds = tresholds.copy()
+
+    for name in new_tresholds.keys():
+        # optimization criterion
+        if name in rates.keys():
+            print(Fore.CYAN, " $$$ ", name, rates[name])
+            if rates[name]['FNR'] > 0. and rates[name]['FNR'] > rates[name]['FPR'] * 5:
+                new_tresholds[name] -= 1
+
+    return new_tresholds
+
+class Optimizer:
+    @staticmethod
+    def optimize(logos, photos):
+        print(Fore.BLUE, ' # Optimization started !!!')
+        new_tresholds = {}
+        kpds = [KPD.SIFT]
+        d = detector.Detector(*kpds, nOctLay=3, nOct=4, hesThresh=100, ext=True, nfeat=10000, eThresh=20, cThresh=0.03,
+                              sigma=2.5)
+        m = matcher.Matcher(KPM.FLANN, *kpds, tresh_factor=0.72)
+        evaluator = Evaluator(d, m, False)
+
+        tresholds = load_tresholds()
+        while True:
+            predictions = evaluator.predict(logos, photos, False)
+            _, _, rates = evaluator.eval(logos, predictions, False)
+
+            new_tresholds = update_tresholds(tresholds, rates)
+            print(Fore.LIGHTBLUE_EX, 'New tresholds:', new_tresholds)
+            if new_tresholds == tresholds:
+                break
+            else:
+                tresholds = new_tresholds
+                save_tresholds(new_tresholds)
+
+        print(Fore.BLUE, ' # Optimization finished !!!')
+        print(Fore.BLUE, 'Optimized tresholds:', new_tresholds)
+        save_tresholds(new_tresholds)

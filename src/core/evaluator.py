@@ -1,7 +1,7 @@
 from src import *
 from src.utils.images import *
-from ..core import Detector
-from ..core import Matcher
+from ..core.detector import Detector
+from ..core.matcher import Matcher
 
 
 class Evaluator:
@@ -20,11 +20,12 @@ class Evaluator:
             try:
                 photo_path = imgpath(photo)
                 photo_img = img_load(photo_path, self._in_grayscale)
+                # photo_img = cv2.adaptiveThreshold(photo_img,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,11,2)
                 photo_features = self._detector(photo_img)
                 detected_logos = {}
                 for logo in logos:
                     threshold = thresholds[logo]
-                    print(" - Logo:", logo, "with threshold:", threshold)
+                    # print(" - Logo:", logo, "with threshold:", threshold)
                     matcheses = self._matcher(logos_features[logo].descriptors, photo_features.descriptors, threshold)
                     if len(matcheses) > 0:
                         # Take the best logo
@@ -47,6 +48,7 @@ class Evaluator:
                     photos_predictions[photo] = max(detected_logos, key=detected_logos.get)
                 else:
                     photos_predictions[photo] = 'Any'
+                print(" ---- Detection is: ", photos_predictions[photo], "\n")
             except Exception:
                 photos_predictions[photo] = 'Exception'
                 print(traceback.format_exc())
@@ -58,6 +60,7 @@ class Evaluator:
         for logo in logos:
             print(" - Getting features of:", logo)
             logo_photo = get_logo_photo_by_name(logo, self._in_grayscale)
+            # logo_photo = cv2.adaptiveThreshold(logo_photo,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,11,2)
             logos_features[logo] = self._detector(logo_photo)
         return logos_features
 
@@ -71,9 +74,16 @@ class Evaluator:
             rates = False
         return hl, cms, rates
 
+    #@staticmethod
+    #def _get_true_labels_for_predictions(photos: List[str], annotations) -> Mapping[str, str]:
+    #    return {photo: annotations[photo] for photo in photos}
+
     @staticmethod
     def _get_true_labels_for_predictions(photos: List[str], annotations) -> Mapping[str, str]:
-        return {photo: annotations[photo] for photo in photos}
+        true_labels = dict.fromkeys(photos)
+        for photo in photos:
+            true_labels[photo] = photo.split("_")[0]
+        return true_labels
 
     def _compute_hamming_loss(self, predictions, true_logos):
         predictions, true_logos = self._map_labels(predictions, true_logos)
