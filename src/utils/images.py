@@ -1,5 +1,6 @@
 from collections import defaultdict
-from typing import Sequence
+from typing import Sequence, List
+from xml.etree.ElementTree import ElementTree, Element, SubElement
 
 import cv2
 import numpy as np
@@ -19,6 +20,7 @@ def logopath(filename: str) -> str:
 def img_load(path: str, in_grayscale: bool) -> np.ndarray:
     exist_assert(path)
     color_mode = 0 if in_grayscale else 1
+    print(color_mode)
     return cv2.imread(path, color_mode)
 
 
@@ -72,3 +74,17 @@ def get_photos_with_logo(logo: str, annotations: Mapping[str, str] = None) -> Se
     for k, v in annotations.items():
         reversed_annotations[v].append(k)
     return reversed_annotations[logo]
+
+
+def create_annotations_from_names(photos: List[str]):
+    for photo in photos:
+        top = Element('annotation')
+        name = SubElement(top, 'filename')
+        name.text = photo
+        obj = SubElement(top, 'object')
+        obj_name = SubElement(obj, 'name')
+        obj_name.text = photo.split("_")[0]
+
+        tree = ElementTree(top)
+        xml_name = photo.split(".")[0] + '.xml'
+        tree.write(open(os.path.join(PATH_ANNOTATIONS, xml_name), 'w'), encoding='unicode', xml_declaration=True)

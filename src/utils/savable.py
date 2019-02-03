@@ -55,3 +55,8 @@ def load_tresholds():
         for name in names:
             tresholds[name] = 10
     return tresholds
+
+
+def reset_thresholds(logos, val):
+    thresholds = {logo: val for logo in logos}
+    save_tresholds(thresholds)

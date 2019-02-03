@@ -1,5 +1,4 @@
 from enum import Enum, auto
-from os.path import join as pj
 
 
 class KPD(Enum):
@@ -15,4 +14,17 @@ class KPM(Enum):
     FLANN = auto()
     BF = auto()
 
+
+class TM(Enum):
+    # THRESHOLDING METHODS
+    CONSTANT = auto()
+    PROGRESSIVE = auto()
+    OPTIMIZED = auto()
+
+
+class PREPROC(Enum):
+    # PREPROCESSING METHODS
+    NONE = auto()
+    BINARIZATION = auto()
+    HIST_EQ = auto()
 

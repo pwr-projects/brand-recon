@@ -6,7 +6,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
-from .consts import KPD, KPM
+from .consts import KPD, KPM, TM, PREPROC
 
 # UTILS
 PHOTO_EXTS = ['jpg', 'png']
@@ -14,6 +14,9 @@ VERBOSE = True
 
 METHODS = list(KPD)
 MATCHING_METHODS = list(KPM)
+THRESHOLDING_METHODS = list(TM)
+PREPROCESSING_METHODS = list(PREPROC)
+
 
 # MATPLOTLIB SETTINGS
 plt.style.use('seaborn-paper')

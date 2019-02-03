@@ -13,7 +13,7 @@ def get_annotations() -> Mapping[str, str]:
     
     for path in files: # tqdm(files, 'Parsing annotations', dynamic_ncols=True):
         with open(path, 'r') as fhd:
-            header = '<?xml version="1.0"?>'
+            header = "<?xml version='1.0' encoding='cp1252'?>"
             lines = fhd.readlines()
 
             if not lines[0].startswith(header):

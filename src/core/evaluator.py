@@ -4,27 +4,49 @@ from ..core.detector import Detector
 from ..core.matcher import Matcher
 
 
+def get_threshold(method: TM, logo: str, keypoints) -> int:
+    threshold = 0
+    if method == TM.OPTIMIZED:
+        thresholds = load_tresholds()
+        threshold = thresholds[logo]
+    elif method == TM.PROGRESSIVE:
+        threshold = len(keypoints) * 0.03
+    elif method == TM.CONSTANT:
+        threshold = 10
+    return threshold
+
+
 class Evaluator:
-    def __init__(self, d: Detector, m: Matcher, in_grayscale: bool):
+    def __init__(self, d: Detector, m: Matcher, in_grayscale: bool, preproc_mode=PREPROC.NONE, infos=True):
         self._detector = d
         self._matcher = m
         self._in_grayscale = in_grayscale
+        self._infos=infos
+        self._preproc_mode = preproc_mode
 
-    def predict(self, logos: List[str], photos: List[str], show: bool) -> Mapping[str, str]:
+    def predict(self, logos: List[str], photos: List[str], show=False, thresholding_method=TM.OPTIMIZED) -> Mapping[str, str]:
         photos_predictions = dict.fromkeys(photos)
         logos_features = self._get_logos_features(logos)
-        thresholds = load_tresholds()
-        print(thresholds)
+
+        if thresholding_method == TM.OPTIMIZED:
+            thresholds = load_tresholds()
+            if self._infos:
+                print(thresholds)
+
         for photo in photos:
-            print(" --- Photo:", photo)
+            if self._infos:
+                print(" --- Photo:", photo)
             try:
                 photo_path = imgpath(photo)
                 photo_img = img_load(photo_path, self._in_grayscale)
-                # photo_img = cv2.adaptiveThreshold(photo_img,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,11,2)
+                if self._preproc_mode == PREPROC.BINARIZATION:
+                    photo_img = cv2.adaptiveThreshold(photo_img,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,11,2)
+                elif self._preproc_mode == PREPROC.HIST_EQ:
+                    photo_img = cv2.equalizeHist(photo_img)
                 photo_features = self._detector(photo_img)
                 detected_logos = {}
                 for logo in logos:
-                    threshold = thresholds[logo]
+                    threshold = get_threshold(thresholding_method, logo, logos_features[logo].keypoints)
                     # print(" - Logo:", logo, "with threshold:", threshold)
                     matcheses = self._matcher(logos_features[logo].descriptors, photo_features.descriptors, threshold)
                     if len(matcheses) > 0:
@@ -48,7 +70,8 @@ class Evaluator:
                     photos_predictions[photo] = max(detected_logos, key=detected_logos.get)
                 else:
                     photos_predictions[photo] = 'Any'
-                print(" ---- Detection is: ", photos_predictions[photo], "\n")
+                if self._infos:
+                    print(" ---- Detection is: ", photos_predictions[photo], "\n")
             except Exception:
                 photos_predictions[photo] = 'Exception'
                 print(traceback.format_exc())
@@ -58,9 +81,13 @@ class Evaluator:
     def _get_logos_features(self, logos: List[str]) -> Mapping[str, Features]:
         logos_features = dict.fromkeys(logos)
         for logo in logos:
-            print(" - Getting features of:", logo)
+            if self._infos:
+                print(" - Getting features of:", logo)
             logo_photo = get_logo_photo_by_name(logo, self._in_grayscale)
-            # logo_photo = cv2.adaptiveThreshold(logo_photo,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,11,2)
+            if self._preproc_mode == PREPROC.BINARIZATION:
+                logo_photo = cv2.adaptiveThreshold(logo_photo,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,11,2)
+            elif self._preproc_mode == PREPROC.HIST_EQ:
+                logo_photo = cv2.equalizeHist(logo_photo)
             logos_features[logo] = self._detector(logo_photo)
         return logos_features
 
@@ -74,16 +101,9 @@ class Evaluator:
             rates = False
         return hl, cms, rates
 
-    #@staticmethod
-    #def _get_true_labels_for_predictions(photos: List[str], annotations) -> Mapping[str, str]:
-    #    return {photo: annotations[photo] for photo in photos}
-
     @staticmethod
     def _get_true_labels_for_predictions(photos: List[str], annotations) -> Mapping[str, str]:
-        true_labels = dict.fromkeys(photos)
-        for photo in photos:
-            true_labels[photo] = photo.split("_")[0]
-        return true_labels
+        return {photo: annotations[photo] for photo in photos}
 
     def _compute_hamming_loss(self, predictions, true_logos):
         predictions, true_logos = self._map_labels(predictions, true_logos)

@@ -7,10 +7,11 @@ from ..consts import *
 
 
 class Matcher:
-    def __init__(self, kpm: KPM, *kpds: Sequence[KPD], tresh_factor=0.65):
+    def __init__(self, kpm: KPM, *kpds: Sequence[KPD], tresh_factor=0.65, print_info=True):
         self._kpds = kpds
         self._kpm = kpm
         self._tresh_factor = tresh_factor
+        self._print_info = print_info
 
     def __call__(self, logo_descs, photo_descs, treshold):
         matcheses = []
@@ -21,8 +22,9 @@ class Matcher:
             if len(matches) < treshold:
                 #print(f'Found no logo. Only {len(matches)} common keypoints')
                 break
-            print(f'Found logo with {len(matches)} common keypoints')
-            print(f'Remaining {len(_photo_descs)} descriptors')
+            if self._print_info:
+                print(f'Found logo with {len(matches)} common keypoints')
+                print(f'Remaining {len(_photo_descs)} descriptors')
 
             matches_ids = list(map(lambda match: match.trainIdx, matches))
             matcheses.append(matches)
