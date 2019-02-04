@@ -1,5 +1,11 @@
+import traceback
+from typing import List
+
+from sklearn.metrics import hamming_loss
+
 from src import *
 from src.utils.images import *
+
 from ..core.detector import Detector
 from ..core.matcher import Matcher
 
@@ -21,10 +27,12 @@ class Evaluator:
         self._detector = d
         self._matcher = m
         self._in_grayscale = in_grayscale
-        self._infos=infos
+        self._infos = infos
         self._preproc_mode = preproc_mode
 
-    def predict(self, logos: List[str], photos: List[str], show=False, thresholding_method=TM.OPTIMIZED) -> Mapping[str, str]:
+    def predict(self, logos: List[str],
+                photos: List[str],
+                show=False, thresholding_method=TM.OPTIMIZED) ->Mapping[str, str]:
         photos_predictions = dict.fromkeys(photos)
         logos_features = self._get_logos_features(logos)
 
@@ -40,7 +48,8 @@ class Evaluator:
                 photo_path = imgpath(photo)
                 photo_img = img_load(photo_path, self._in_grayscale)
                 if self._preproc_mode == PREPROC.BINARIZATION:
-                    photo_img = cv2.adaptiveThreshold(photo_img,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,11,2)
+                    photo_img = cv2.adaptiveThreshold(
+                        photo_img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
                 elif self._preproc_mode == PREPROC.HIST_EQ:
                     photo_img = cv2.equalizeHist(photo_img)
                 photo_features = self._detector(photo_img)
@@ -85,7 +94,8 @@ class Evaluator:
                 print(" - Getting features of:", logo)
             logo_photo = get_logo_photo_by_name(logo, self._in_grayscale)
             if self._preproc_mode == PREPROC.BINARIZATION:
-                logo_photo = cv2.adaptiveThreshold(logo_photo,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,11,2)
+                logo_photo = cv2.adaptiveThreshold(
+                    logo_photo, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
             elif self._preproc_mode == PREPROC.HIST_EQ:
                 logo_photo = cv2.equalizeHist(logo_photo)
             logos_features[logo] = self._detector(logo_photo)
@@ -143,10 +153,10 @@ class Evaluator:
         preds = list(predictions.values())
         trues = list(true_labels.values())
         for logo in logos:
-            tp = sum([0]+[1 for i in range(len(preds)) if preds[i] == logo and trues[i] == logo])
-            tn = sum([0]+[1 for i in range(len(preds)) if not preds[i] == logo and not trues[i] == logo])
-            fp = sum([0]+[1 for i in range(len(preds)) if preds[i] == logo and not trues[i] == logo])
-            fn = sum([0]+[1 for i in range(len(preds)) if not preds[i] == logo and trues[i] == logo])
+            tp = sum([0] + [1 for i in range(len(preds)) if preds[i] == logo and trues[i] == logo])
+            tn = sum([0] + [1 for i in range(len(preds)) if not preds[i] == logo and not trues[i] == logo])
+            fp = sum([0] + [1 for i in range(len(preds)) if preds[i] == logo and not trues[i] == logo])
+            fn = sum([0] + [1 for i in range(len(preds)) if not preds[i] == logo and trues[i] == logo])
 
             cms[logo] = {'TP': tp,
                          'TN': tn,
