@@ -1,5 +1,0 @@
-pillow
-matplotlib
-numpy
-opencv-python
-tqdm

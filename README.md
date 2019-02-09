@@ -1,29 +1,43 @@
-# The system of recognizing brands on static photos
+# Rozpoznawanie znaków towarowych na obrazach statycznych
 
-## Datasets:
+## Informacje
 
-1. [Flickr Logos 27 dataset][Flickr Logos 27 dataset]
-2. [Logos-32plus #1][Logos-32plus #1]
-3. [Logo-32plus #2][Logo-32plus #2]
-4. [LDD-Icon][LDD-Icon]
-5. [WebLogo-2M Dataset][WebLogo-2M Dataset]
-6. [TopLogo-10 Dataset][TopLogo-10 Dataset]
+Program jest wynikiem projektu na analiza obrazów i wideo.
 
+Jest napisany w języku Python. Należy go uruchamiać interpretatorem w wersji co najmnmiej 3.6.
 
+## Instalacja
 
+Instalacja niezbędnych do działania paczek:
 
-## **INFO**!!!!
+### Opcjonalnie
 
-For now, dataset consists of 2 dirs: one with logos and one with photos, on which logos suppose to be found.
+Stworzyć wirtualne środowisko za pomocą na przykład **virtualenv**, aktywować.
 
-I've been using "Evaluation/Test Data" and "Logo Icons" from [this cool dataset][WebLogo-2M Dataset]
+```shell
+$ source [virtualenv name]/bin/activate
+```
 
+Zainstalować paczki za pomocą komendy
 
+```shell
+$ pip install -r requirements.txt
+```
 
+lub 
 
-[Flickr Logos 27 dataset]: http://image.ntua.gr/iva/datasets/flickr_logos/
-[Logos-32plus #1]: https://drive.google.com/drive/folders/0B7jaG1vRBvyfQWhJc3ZRZE5OZjg
-[Logo-32plus #2]: /http://www.ivl.disco.unimib.it/activities/logo-recognition/
-[LDD-Icon]: https://data.vision.ee.ethz.ch/sagea/lld/
-[WebLogo-2M Dataset]: http://www.eecs.qmul.ac.uk/~hs308/WebLogo-2M.html/
-[TopLogo-10 Dataset]: http://www.eecs.qmul.ac.uk/~hs308/qmul_toplogo10.html/
+```shell
+# pip install -r requirements.txt
+```
+
+W przypadku Windowsa:
+
+```
+python -m pip install -r requirements.txt
+```
+
+## **UWAGA**
+
+Do poprawnego działania programu należy mieć skompilowaną bibliotekę **OpenCV** wraz z płatnymi wersjami modułów dodatkowych (contrib modules), w których znajdują się zaimplementowane algorytmy SIFT oraz SURF.
+
+Podczas powstawania projektu korzystano z OpenCV w wersji 4.0.0.

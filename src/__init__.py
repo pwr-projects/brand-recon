@@ -18,8 +18,6 @@ color_init()
 for dirpath in (PATH_LOGO,
                 PATH_ANNOTATIONS,
                 PATH_PHOTOS,
-                PATH_PERSISTED,
-                PATH_TRESHOLDS,
                 DIR_TEMP):
     if not os.path.isdir(dirpath):
         print(f'Creating {dirpath}', end='...')
